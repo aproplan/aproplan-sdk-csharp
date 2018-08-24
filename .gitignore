@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Aproplan.Api/bin
+/Aproplan.Api/obj
+/packages
+/TestSdkConsole/bin
+/TestSdkConsole/obj
