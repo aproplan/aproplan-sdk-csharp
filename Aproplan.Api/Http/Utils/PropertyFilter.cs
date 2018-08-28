@@ -6,11 +6,11 @@ namespace Aproplan.Api.Http.Utils
 {
     public abstract class PropertyFilter : Filter
     {
-        public string propertyPath { get; set; }
+        public string PropertyPath { get; set; }
 
         public PropertyFilter(string propertyPath)
         {
-            propertyPath = propertyPath;
+            PropertyPath = propertyPath;
         }
     }
 }

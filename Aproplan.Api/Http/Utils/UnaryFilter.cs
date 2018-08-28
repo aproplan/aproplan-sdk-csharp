@@ -15,7 +15,7 @@ namespace Aproplan.Api.Http.Utils
 
         public override String ToString()
         {
-            return $"Filter.{Type.ToString()}({propertyPath.ToString()})";
+            return $"Filter.{Type.ToString()}({PropertyPath.ToString()})";
         }
     }
 }
