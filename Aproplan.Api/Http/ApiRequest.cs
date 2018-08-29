@@ -7,9 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -27,6 +29,14 @@ namespace Aproplan.Api.Http
         List,
         Ids, 
         Count
+    }
+
+    public enum RequestLoginState
+    {
+        NotConnected,
+        Connected,
+        Renewing,
+        Connecting
     }
     public class ApiRequest: IDisposable
     {
@@ -46,6 +56,27 @@ namespace Aproplan.Api.Http
 
         public string ApiRootUrl { get; }
 
+        public RequestLoginState RequestLoginState
+        {
+            get
+            {
+                if (CurrentUser == null)
+                {
+                    if(!_isRenewingToken && !_isConnecting)
+                        return RequestLoginState.NotConnected;
+                    if (_isConnecting)
+                        return RequestLoginState.Connecting;
+                }
+                else if (CurrentUser != null)
+                {
+                    if (_isRenewingToken) return RequestLoginState.Renewing;
+                    if (_isConnecting) return RequestLoginState.Connecting;
+                    return RequestLoginState.Connected;
+                }
+                return RequestLoginState.NotConnected;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -63,17 +94,51 @@ namespace Aproplan.Api.Http
                 pass = Password
             };
 
-            string data = JsonConvert.SerializeObject(loginInfo);
 
-            string res = await Request(ApiRootUrl + "simpleloginsecure", ApiMethod.Post, null, data);
-            JObject jsonLogin = (JObject) JsonConvert.DeserializeObject(res);
-            CurrentUser = JsonConvert.DeserializeObject<User>(jsonLogin["UserInfo"].ToString());
-            TokenInfo = new TokenInfo();
-            TokenInfo.Token = Guid.Parse(jsonLogin["Token"].Value<string>());
-            TokenInfo.ValidityStart = jsonLogin["ValidityStart"].Value<DateTime>();
-            TokenInfo.ValidityLimit = jsonLogin["ValidityLimit"].Value<DateTime>();
-            return CurrentUser;
+            string url = ApiRootUrl + "simpleloginsecure";
+            try
+            {
+                _isConnecting = true;
+                string data = JsonConvert.SerializeObject(loginInfo);
+                
+                string res = await Request(url, ApiMethod.Post, null, data);
+                if (String.IsNullOrEmpty(res))
+                {
+                    throw new ApiException("Your login or password is not correct", "INVALID_CREDENTIALS", null,  url, 401, "POST");
+                }
+                JObject jsonLogin = (JObject)JsonConvert.DeserializeObject(res);
+                CurrentUser = JsonConvert.DeserializeObject<User>(jsonLogin["UserInfo"].ToString());
+                TokenInfo = new TokenInfo();
+                TokenInfo.Token = Guid.Parse(jsonLogin["Token"].Value<string>());
+                TokenInfo.ValidityStart = jsonLogin["ValidityStart"].Value<DateTime>();
+                TokenInfo.ValidityLimit = jsonLogin["ValidityLimit"].Value<DateTime>();
+                RenewTokenLoop(Convert.ToInt32(TokenInfo.ValidityLimit.Subtract(DateTime.Now.ToUniversalTime()).TotalMilliseconds - 120000));
+            }
+            finally
+            {
+                _isConnecting = false;
+            }
             
+            return CurrentUser;
+        }
+
+        public void Logout()
+        {
+            if(_renewTimer != null)
+                _renewTimer.Dispose();
+            CurrentUser = null;
+            TokenInfo = null;
+        }
+
+        private void RenewTokenLoop(int msDuration)
+        {
+            if (_renewTimer != null)
+                _renewTimer.Dispose();
+            _renewTimer = new Timer((obj) =>
+            {
+                RenewToken();
+            }, null, msDuration, Timeout.Infinite);
+
         }
 
         /// <summary>
@@ -82,15 +147,24 @@ namespace Aproplan.Api.Http
         /// <returns>The new token with validity time range</returns>
         public async Task<TokenInfo> RenewToken()
         {
-            dynamic loginInfo = new
+            try
             {
-                alias = UserLogin,
-                pass = Password
-            };
-            string data = JsonConvert.SerializeObject(loginInfo);
-
-            string res = await Request(ApiRootUrl + "renewtoken", ApiMethod.Get, null, null);
-            TokenInfo = JsonConvert.DeserializeObject<TokenInfo>(res);
+                Console.WriteLine("Renew token call...");
+                string res = await Request(ApiRootUrl + "renewtoken", ApiMethod.Get, null, null);
+                TokenInfo = JsonConvert.DeserializeObject<TokenInfo>(res);
+                Console.WriteLine("Renew token :" + TokenInfo.ValidityLimit.ToShortTimeString());
+                RenewTokenLoop(Convert.ToInt32(TokenInfo.ValidityLimit.Subtract(DateTime.Now.ToUniversalTime()).TotalMilliseconds - 120000));
+            }
+            catch(Exception ex)
+            {
+                TokenInfo = null;
+            }
+            finally
+            {
+                _isRenewingToken = false;
+            }
+            
+            
             return TokenInfo;
 
         }
@@ -225,6 +299,13 @@ namespace Aproplan.Api.Http
             return resourceName;
         }
 
+        private bool IsTokenValid()
+        {
+            bool retVal = TokenInfo != null && TokenInfo.ValidityLimit < DateTime.Now;            
+            return retVal;
+        }
+        
+
         /// <summary>
         /// To make a call to the APROPLAN api
         /// </summary>
@@ -236,6 +317,20 @@ namespace Aproplan.Api.Http
         /// <returns>The response of the request as a string</returns>
         public async Task<string> Request(string uri, ApiMethod method, Dictionary<string, string> queryParams = null, string data = null, bool isFile = false)
         {
+            int nb = 0;
+            if (uri != _resourceRenew)
+            {
+                if ((RequestLoginState == RequestLoginState.NotConnected || !IsTokenValid()) && !_resourcesWithoutConnection.Contains(uri))
+                    throw new ApiException("Cannot call API without to be connected", "NOT_CONNECTED", null, uri, -1, method.ToString(), null);
+            }
+            if (!_resourcesLogin.Contains(uri) && uri != _resourceRenew)
+            {
+                while (RequestLoginState == RequestLoginState.Connecting || RequestLoginState == RequestLoginState.Renewing && nb < 10)
+                {
+                    Thread.Sleep(300);
+                    nb++;
+                }
+            }
             UriBuilder uriBuilder = new UriBuilder(uri);
 
             Dictionary<string, string> allQueryParams = BuildDefaultQueryParams();
@@ -246,7 +341,7 @@ namespace Aproplan.Api.Http
             uriBuilder.Query = new FormUrlEncodedContent(allQueryParams).ReadAsStringAsync().Result;
 
             
-            WebRequest request = WebRequest.Create(uriBuilder.Uri);            
+            WebRequest request = WebRequest.Create(uriBuilder.Uri);
             request.Method = method.ToString().ToUpperInvariant();
 
             Stream stream;
@@ -288,7 +383,48 @@ namespace Aproplan.Api.Http
             }
             catch (WebException ex)
             {
-                throw;
+                string url = ex.Response.ResponseUri.ToString();
+                string resMethod = method.ToString();
+                string errorCode = null;
+                string errorId = null;
+                int statusCode = 0;
+                string message = "An error occured while the api call";
+                HttpWebResponse httpResponse = ex.Response as HttpWebResponse;
+                if(httpResponse != null)
+                {
+                    resMethod = httpResponse.Method;
+                    statusCode = (int) httpResponse.StatusCode;
+                }
+                using (var streamRes = new StreamReader(ex.Response.GetResponseStream()))
+                {
+                    string res = streamRes.ReadToEnd();
+                    if(ex.Response.ContentType.Contains("application/json"))
+                    {
+                        JArray json = JsonConvert.DeserializeObject<JArray>(res);
+                        JToken item = json.First;
+                        IEnumerable<JProperty> properties = item.Children<JProperty>();
+                        var element = properties.FirstOrDefault(x => x.Name == "Message");
+                        if (element != null)
+                            message = element.Value.ToString();
+
+                        element = properties.FirstOrDefault(x => x.Name == "ErrorCode");
+                        if (element != null)
+                            errorCode = element.Value.ToString();
+                        element = properties.FirstOrDefault(x => x.Name == "ErrorGuid");
+                        if (element != null)
+                            errorId = element.Value.ToString();
+
+                    }
+                }
+                throw new ApiException(message, errorCode, errorId, url, statusCode, resMethod, ex);
+            }
+            catch(Exception ex)
+            {
+                if (ex is ApiException)
+                    throw;
+                string url = uri;
+                string resMethod = method.ToString();
+                throw new ApiException("An error occured", null, null, url, 0, resMethod, ex);
             }
         }
 
@@ -308,10 +444,11 @@ namespace Aproplan.Api.Http
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            if (_renewTimer != null)
+                _renewTimer.Dispose();
         }
 
-
+          
 
         #endregion
 
@@ -323,13 +460,38 @@ namespace Aproplan.Api.Http
             Password = password;
             RequesterId = requesterId;
             ApiVersion = apiVersion;
-
             ApiRootUrl = rootUrl[rootUrl.Length - 1] == '/' ? rootUrl + "rest/": rootUrl + "/rest/";
+            _resourcesWithoutConnection = new List<string>
+            {
+                ApiRootUrl + "countries",
+                ApiRootUrl + "countriesids",
+                ApiRootUrl + "countrycount",
+                ApiRootUrl + "languages",
+                ApiRootUrl + "languagesids",
+                ApiRootUrl + "languagecount",
+                ApiRootUrl + "loginwithfullinfosecure",
+                ApiRootUrl + "loginsecure",
+                ApiRootUrl + "simpleloginsecure"
+            };
+            _resourcesLogin = new List<string>
+            {
+                ApiRootUrl + "loginwithfullinfosecure",
+                ApiRootUrl + "loginsecure",
+                ApiRootUrl + "simpleloginsecure"
+            };
+            _resourceRenew = ApiRootUrl + "renewtoken";
         }
 
         #endregion
 
         #region Private members
+
+        Timer _renewTimer;
+        bool _isRenewingToken = false;
+        bool _isConnecting = false;
+        readonly List<string> _resourcesWithoutConnection;
+        readonly List<string> _resourcesLogin;
+        readonly string _resourceRenew;
 
         #endregion
     }
