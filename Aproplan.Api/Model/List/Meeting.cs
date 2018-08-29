@@ -1,4 +1,5 @@
-﻿using Aproplan.Api.Model.Actors;
+﻿using Aproplan.Api.Model.AccessRights;
+using Aproplan.Api.Model.Actors;
 using Aproplan.Api.Model.Projects;
 using System;
 using System.Collections.Generic;
@@ -131,11 +132,11 @@ namespace Aproplan.Api.Model.List
             get;
             set;
         }
-
-        //Bao added this property to know the right of the current user on the meeting
-        //Note that, if the meeting is public and the current user is not the participant of the meeting, the access right in this case is the project access right of the user on meeting's project
-        //Calculated
-        //public MeetingAccessRight UserAccessRight { get; set; }
+        
+        /// <summary>
+        /// Calculated
+        /// </summary>
+        public MeetingAccessRight UserAccessRight { get; set; }
 
         //AP-6240 : Thumbnails view of the lists
         //Add these calculated properties to display on the list 

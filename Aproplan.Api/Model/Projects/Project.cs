@@ -1,4 +1,5 @@
-﻿using Aproplan.Api.Model.Actors;
+﻿using Aproplan.Api.Model.AccessRights;
+using Aproplan.Api.Model.Actors;
 using Aproplan.Api.Model.IdentificationFiles;
 using System;
 using System.Collections.Generic;
@@ -34,5 +35,11 @@ namespace Aproplan.Api.Model.Projects
 
         public DateTime? EndDate { get; set; }
         public Guid PhotoFolderId { get; set; }
+
+
+        /// <summary>
+        /// Calculated
+        /// </summary>
+        public ProjectAccessRight UserAccessRight { get; set; }
     }
 }
