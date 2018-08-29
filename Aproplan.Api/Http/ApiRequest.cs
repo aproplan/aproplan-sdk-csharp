@@ -253,6 +253,110 @@ namespace Aproplan.Api.Http
         }
 
         /// <summary>
+        /// To create new user in APROPLAN
+        /// </summary>
+        /// <param name="newUser">The user to create</param>
+        /// <param name="password">The password of the new user to apply</param>
+        /// <param name="queryParams">Parameters to send in the create user call</param>
+        /// <returns>The new user created</returns>
+        public async Task<User> CreateUser(User newUser, string password, Dictionary<string, string> queryParams)
+        {
+            string url = ApiRootUrl + GetEntityResourceName<User>(GetEntityResourceType.List);
+            dynamic data = new
+            {
+                user = newUser,
+                pass = password
+            };
+
+            string response = await Request(url, ApiMethod.Post, queryParams, data);
+            return JsonConvert.DeserializeObject<User>(response);
+        }
+
+        /// <summary>
+        /// To create a batch of a same kind of entity
+        /// </summary>
+        /// <typeparam name="T">The type of the entity to create</typeparam>
+        /// <param name="entities">The list of entities to create/push in APROPLAN</param>
+        /// <returns>The list of entities created</returns>
+        public async Task<T[]> CreateEntities<T>(T[] entities, Dictionary<string, string> queryParams = null) where T: Entity
+        {
+            return await CreateOrUpdateEntities<T>(entities, true, queryParams);
+        }
+
+        /// <summary>
+        /// To create new entity
+        /// </summary>
+        /// <typeparam name="T">The type of the entity to create</typeparam>
+        /// <param name="entity">The entity to create</param>
+        /// <returns>The entity created</returns>
+        public async Task<T> CreateEntity<T>(T entity, Dictionary<string, string> queryParams = null) where T: Entity
+        {
+            T[] entities = null;
+            if(entity != null)
+            {
+                entities = new[] { entity };
+            }
+            T[] newEntities = await CreateEntities<T>(entities, queryParams);
+            return newEntities.Length == 0 ? null : newEntities[0];
+        }
+
+        /// <summary>
+        /// To update a batch of a same kind of entity
+        /// </summary>
+        /// <typeparam name="T">The type of the entity to update</typeparam>
+        /// <param name="entities">The list of entities to update in APROPLAN</param>
+        /// <returns>The list of entities updated</returns>
+        public async Task<T[]> UpdateEntities<T>(T[] entities) where T : Entity
+        {
+
+            return await CreateOrUpdateEntities<T>(entities, false);
+        }
+
+        
+        /// <summary>
+        /// To update new entity
+        /// </summary>
+        /// <typeparam name="T">The type of the entity to update</typeparam>
+        /// <param name="entity">The entity to update</param>
+        /// <returns>The entity updated</returns>
+        public async Task<T> UpdateEntity<T>(T entity) where T : Entity
+        {
+            T[] entities = null;
+            if (entity != null)
+            {
+                entities = new[] { entity };
+            }
+            T[] newEntities = await UpdateEntities<T>(entities);
+            return newEntities.Length == 0 ? null : newEntities[0];
+        }
+
+        /// <summary>
+        /// To delete a list of entities by its ids
+        /// </summary>
+        /// <typeparam name="T">The type of entity to delete</typeparam>
+        /// <param name="ids">The list of id of the entities to delete</param>
+        /// <returns>A boolean to specify that the delete was successfull</returns>
+        public async Task<bool> DeleteEntities<T>(IEnumerable<Guid> ids) where T: Entity
+        {
+            string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
+            string url = ApiRootUrl + resourceName;
+            await Request(url, ApiMethod.Delete, null, JsonConvert.SerializeObject(ids));
+            return true;
+        }
+
+        /// <summary>
+        /// To delete an entity by its id
+        /// </summary>
+        /// <typeparam name="T">The type of entity to delete</typeparam>
+        /// <param name="id">The id of the entity to delete</param>
+        /// <returns>A boolean to specify that the delete was successfull</returns>
+        public async Task<bool> DeleteEntity<T>(Guid id) where T: Entity
+        {
+            return await DeleteEntities<T>(new[] { id });
+        }
+
+
+        /// <summary>
         /// Call a resource of the APROPLAN API with the GET method
         /// </summary>
         /// <param name="resourceName">The resource name to get</param>
@@ -269,6 +373,20 @@ namespace Aproplan.Api.Http
             return await Request(ApiRootUrl + resourceName, ApiMethod.Get, queryParams);
         }
 
+        private async Task<T[]> CreateOrUpdateEntities<T>(T[] entities, bool isCreation, Dictionary<string, string> queryParams = null) where T : Entity
+        {
+            string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
+            string url = ApiRootUrl + resourceName;
+            string response = null;
+            ApiMethod method = isCreation ? ApiMethod.Post : ApiMethod.Put;
+            if (entities != null && entities.Length > 0)
+                response = await Request(url, method, queryParams, JsonConvert.SerializeObject(entities));
+
+            T[] resEntities = null;
+            if (!String.IsNullOrEmpty(response))
+                resEntities = JsonConvert.DeserializeObject<T[]>(response);
+            return resEntities;
+        }
 
 
         private string GetEntityResourceName<T>(GetEntityResourceType type) where T: Entity

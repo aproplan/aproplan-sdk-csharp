@@ -7,12 +7,13 @@ namespace Aproplan.Api.Model
     public abstract class Entity
     {
         public Guid Id;
-        public string EntityVersion;
+        public int EntityVersion;
         public string[] ModifiedProperties;
 
         public Entity()
         {
-            Id = new Guid();
+            Id = Guid.NewGuid();
+            EntityVersion = 0;
         }
     }
 }
