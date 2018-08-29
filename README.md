@@ -26,6 +26,7 @@ requester.Login()
 ### CRUD
 
 To make CRUD operations on the entities, you need to use the following methods of ApiRequest:
+
 * Read
 	* GetEntities
 	* GetEntitiesCount
