@@ -4,7 +4,7 @@ You can use this C# project to interact with the APROPLAN API in order to create
 
 # Usage
 
-## Initialization
+### Initialization
 
 * First, you need to a requestid to identify your app into APROPLAN. You can make the [request to get it](https://www.aproplan.com/fr-be/integrations)
 * When you have a requesterid and an account to connect to APROPLAN, you need to initialize an ApiRequest object in the following way:
@@ -15,7 +15,7 @@ using (ApiRequest requester = new ApiRequest("[userlogin]", "[userpassword]", ne
 }
 ```
 
-## Login
+### Login
 
 * You need to log you first before to make any other call through the APROPLAN API and to retrieve the user entity
 
@@ -23,7 +23,7 @@ using (ApiRequest requester = new ApiRequest("[userlogin]", "[userpassword]", ne
 requester.Login()
 ```
 
-## CRUD
+### CRUD
 
 To make CRUD operations on the entities, you need to use the following methods of ApiRequest:
 * Read
@@ -41,7 +41,7 @@ To make CRUD operations on the entities, you need to use the following methods o
 	* DeleteEntities
 	* DeleteEntity
 
-5. Upload documents
+### Upload documents
 
 To upload document, there is a specific service that you can instantiate to make this kind of operaion
 
