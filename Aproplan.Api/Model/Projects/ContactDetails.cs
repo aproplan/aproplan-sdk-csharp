@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects
 {
-    public class ContactDetails
+    public partial class ContactDetails
     {
         public string City
         {

@@ -44,9 +44,9 @@ namespace Aproplan.Api.Http
 
         public string ApiVersion { get; } = "13";
 
-        public string UserLogin { get; }
+        public string UserLogin { get; private set; }
 
-        public string Password { get; }
+        public string Password { get; private set; }
 
         public User CurrentUser { get; private set; }
 
@@ -88,6 +88,8 @@ namespace Aproplan.Api.Http
         /// <returns>The user connected</returns>
         public async Task<User> Login()
         {
+            if (string.IsNullOrEmpty(UserLogin)) throw new ArgumentNullException("UserLogin");
+            if (string.IsNullOrEmpty(Password)) throw new ArgumentNullException("Password");
             dynamic loginInfo = new
             {
                 alias = UserLogin,
@@ -120,6 +122,13 @@ namespace Aproplan.Api.Http
             }
             
             return CurrentUser;
+        }
+
+        public async Task<User> Login(string login, string password)
+        {
+            UserLogin = login;
+            Password = password;
+            return await Login();
         }
 
         public void Logout()
@@ -501,40 +510,44 @@ namespace Aproplan.Api.Http
             }
             catch (WebException ex)
             {
-                string url = ex.Response.ResponseUri.ToString();
-                string resMethod = method.ToString();
-                string errorCode = null;
-                string errorId = null;
-                int statusCode = 0;
-                string message = "An error occured while the api call";
-                HttpWebResponse httpResponse = ex.Response as HttpWebResponse;
-                if(httpResponse != null)
+                if (ex.Response != null)
                 {
-                    resMethod = httpResponse.Method;
-                    statusCode = (int) httpResponse.StatusCode;
-                }
-                using (var streamRes = new StreamReader(ex.Response.GetResponseStream()))
-                {
-                    string res = streamRes.ReadToEnd();
-                    if(ex.Response.ContentType.Contains("application/json"))
+                    string url = ex.Response.ResponseUri.ToString();
+                    string resMethod = method.ToString();
+                    string errorCode = null;
+                    string errorId = null;
+                    int statusCode = 0;
+                    string message = "An error occured while the api call";
+                    HttpWebResponse httpResponse = ex.Response as HttpWebResponse;
+                    if (httpResponse != null)
                     {
-                        JArray json = JsonConvert.DeserializeObject<JArray>(res);
-                        JToken item = json.First;
-                        IEnumerable<JProperty> properties = item.Children<JProperty>();
-                        var element = properties.FirstOrDefault(x => x.Name == "Message");
-                        if (element != null)
-                            message = element.Value.ToString();
-
-                        element = properties.FirstOrDefault(x => x.Name == "ErrorCode");
-                        if (element != null)
-                            errorCode = element.Value.ToString();
-                        element = properties.FirstOrDefault(x => x.Name == "ErrorGuid");
-                        if (element != null)
-                            errorId = element.Value.ToString();
-
+                        resMethod = httpResponse.Method;
+                        statusCode = (int)httpResponse.StatusCode;
                     }
+                    using (var streamRes = new StreamReader(ex.Response.GetResponseStream()))
+                    {
+                        string res = streamRes.ReadToEnd();
+                        if (ex.Response.ContentType.Contains("application/json"))
+                        {
+                            JArray json = JsonConvert.DeserializeObject<JArray>(res);
+                            JToken item = json.First;
+                            IEnumerable<JProperty> properties = item.Children<JProperty>();
+                            var element = properties.FirstOrDefault(x => x.Name == "Message");
+                            if (element != null)
+                                message = element.Value.ToString();
+
+                            element = properties.FirstOrDefault(x => x.Name == "ErrorCode");
+                            if (element != null)
+                                errorCode = element.Value.ToString();
+                            element = properties.FirstOrDefault(x => x.Name == "ErrorGuid");
+                            if (element != null)
+                                errorId = element.Value.ToString();
+
+                        }
+                    }
+                    throw new ApiException(message, errorCode, errorId, url, statusCode, resMethod, ex);
                 }
-                throw new ApiException(message, errorCode, errorId, url, statusCode, resMethod, ex);
+                throw;
             }
             catch(Exception ex)
             {
@@ -574,10 +587,16 @@ namespace Aproplan.Api.Http
 
         public ApiRequest(string login, string password, Guid requesterId, string apiVersion = "13", string rootUrl = "https://app.aproplan.com")
         {
+            if (requesterId == Guid.Empty) throw new ArgumentNullException("requesterId");
             UserLogin = login;
             Password = password;
             RequesterId = requesterId;
             ApiVersion = apiVersion;
+            if (string.IsNullOrEmpty(rootUrl))
+                rootUrl = DefaultApiRootUrl;
+            if (string.IsNullOrEmpty(apiVersion))
+                apiVersion = DefaultApiVersion;
+                
             ApiRootUrl = rootUrl[rootUrl.Length - 1] == '/' ? rootUrl + "rest/": rootUrl + "/rest/";
             _resourcesWithoutConnection = new List<string>
             {
@@ -600,6 +619,16 @@ namespace Aproplan.Api.Http
             _resourceRenew = ApiRootUrl + "renewtoken";
         }
 
+        public ApiRequest(string login, string password, Guid requesterId, string rootUrl = null): this(login, password, requesterId, DefaultApiVersion, rootUrl)
+        {
+
+        }
+
+        public ApiRequest(Guid requesterId, string rootUrl = null) : this(null, null, requesterId, DefaultApiVersion, rootUrl)
+        {
+
+        }
+
         #endregion
 
         #region Private members
@@ -610,6 +639,9 @@ namespace Aproplan.Api.Http
         readonly List<string> _resourcesWithoutConnection;
         readonly List<string> _resourcesLogin;
         readonly string _resourceRenew;
+
+        private static string DefaultApiVersion = "13";
+        private static string DefaultApiRootUrl = "https://api.aproplan.com/";
 
         #endregion
     }

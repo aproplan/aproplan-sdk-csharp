@@ -11,7 +11,7 @@ namespace Aproplan.Api.Model.Projects
         Photo = 1,  // system folder created to storage the photo
         Report = 2  // system folder created to storage the report
     }
-    public class Folder: Entity
+    public partial class Folder: Entity
     {
         public string Name { get; set; }
         public Guid? ParentFolderId

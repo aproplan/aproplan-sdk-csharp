@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -34,8 +35,13 @@ namespace Aproplan.Api.Http.Utils
         public static Filter Ge(string propertyPath, object value) { return new ComparisonFilter(FilterComparisonType.Ge, value, propertyPath); }
         public static Filter Lt(string propertyPath, object value) { return new ComparisonFilter(FilterComparisonType.Lt, value, propertyPath); }
         public static Filter Le(string propertyPath, object value) { return new ComparisonFilter(FilterComparisonType.Le, value, propertyPath); }
-        public static Filter In(string propertyPath, IEnumerable<object> values) {
-            return new ComparisonFilter(FilterComparisonType.In, string.Join(",", values), propertyPath);
+        public static Filter In(string propertyPath, IEnumerable values) {
+            List<string> criterias = new List<string>();
+            foreach(var val in values)
+            {
+                criterias.Add(val.ToString());
+            }
+            return new ComparisonFilter(FilterComparisonType.In, string.Join(",", criterias), propertyPath);
         }
         public static Filter IsFalse(string propertyPath) { return new UnaryFilter(FilterUnaryType.IsFalse, propertyPath); }
         public static Filter IsTrue(string propertyPath) { return new UnaryFilter(FilterUnaryType.IsTrue, propertyPath); }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model
 {
-    public abstract class Entity
+    public abstract partial class Entity
     {
         public Guid Id;
         public int EntityVersion;

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects
 {
-    public class Project: Entity
+    public partial class Project : Entity
     {
         public string Name { get; set; }
         public string Code { get; set; }
