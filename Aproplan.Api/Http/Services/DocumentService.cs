@@ -39,7 +39,7 @@ namespace Aproplan.Api.Http.Services
         /// <returns></returns>
         public async Task<Document> UploadNewDocument(string filePath, Guid folderId, string nameDocument = null)
         {
-            return await UploadDocumentOrVersion(UploadFileType.Working, filePath, folderId);
+            return await UploadDocumentOrVersion(UploadFileType.Working, filePath, folderId, nameDocument);
         }
 
         /// <summary>

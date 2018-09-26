@@ -40,6 +40,8 @@ namespace Aproplan.Api.Http
     }
     public class ApiRequest: IDisposable
     {
+        public event EventHandler<User> UserChanged;
+
         #region Properties
 
         public string ApiVersion { get; } = "13";
@@ -48,7 +50,18 @@ namespace Aproplan.Api.Http
 
         public string Password { get; private set; }
 
-        public User CurrentUser { get; private set; }
+        public User CurrentUser
+        {
+            get { return _currentUser; }
+            private set
+            {
+                if (_currentUser != value)
+                {
+                    _currentUser = value;
+                    UserChanged?.Invoke(this, _currentUser);
+                }
+            }
+        }
 
         public TokenInfo TokenInfo { get; private set; }
 
@@ -96,7 +109,7 @@ namespace Aproplan.Api.Http
                 pass = Password
             };
 
-
+            User user = null;
             string url = ApiRootUrl + "simpleloginsecure";
             try
             {
@@ -109,16 +122,19 @@ namespace Aproplan.Api.Http
                     throw new ApiException("Your login or password is not correct", "INVALID_CREDENTIALS", null,  url, 401, "POST");
                 }
                 JObject jsonLogin = (JObject)JsonConvert.DeserializeObject(res);
-                CurrentUser = JsonConvert.DeserializeObject<User>(jsonLogin["UserInfo"].ToString());
                 TokenInfo = new TokenInfo();
                 TokenInfo.Token = Guid.Parse(jsonLogin["Token"].Value<string>());
                 TokenInfo.ValidityStart = jsonLogin["ValidityStart"].Value<DateTime>();
                 TokenInfo.ValidityLimit = jsonLogin["ValidityLimit"].Value<DateTime>();
+
+                
+                user = JsonConvert.DeserializeObject<User>(jsonLogin["UserInfo"].ToString());
                 RenewTokenLoop(Convert.ToInt32(TokenInfo.ValidityLimit.Subtract(DateTime.Now.ToUniversalTime()).TotalMilliseconds - 120000));
             }
             finally
             {
                 _isConnecting = false;
+                CurrentUser = user;
             }
             
             return CurrentUser;
@@ -633,6 +649,7 @@ namespace Aproplan.Api.Http
 
         #region Private members
 
+        private User _currentUser;
         Timer _renewTimer;
         bool _isRenewingToken = false;
         bool _isConnecting = false;
