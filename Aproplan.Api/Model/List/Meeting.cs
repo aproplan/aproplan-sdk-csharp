@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.List
 {
-    public class Meeting : Entity
+    public partial class Meeting : Entity
     {        
         public List<MeetingConcern> MeetingConcerns { get; set; }
         public List<MeetingDocument> MeetingDocuments { get; set; }

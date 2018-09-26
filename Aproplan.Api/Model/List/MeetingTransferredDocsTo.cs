@@ -2,7 +2,7 @@
 
 namespace Aproplan.Api.Model.List
 {
-    public class MeetingTransferredDocsTo : Entity
+    public partial class MeetingTransferredDocsTo : Entity
     {
         public MeetingTransferredDocs MeetingTransferredDocs { get; set; }
         public Guid? UserId { get; set; }

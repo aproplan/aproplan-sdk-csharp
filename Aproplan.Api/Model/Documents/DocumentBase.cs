@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Documents
 {
-    public class DocumentBase: SheetBase
+    public partial class DocumentBase : SheetBase
     {
         public string ImageUrl
         {

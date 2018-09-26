@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class FormSectionBase : FormElementBase
+    public partial class FormSectionBase : FormElementBase
     {
         public static int FormSectionApiVersion = 11;
         public int ItemsCount

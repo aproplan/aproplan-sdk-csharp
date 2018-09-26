@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects.Config
 {
-    public class Chapter : ChapterBase
+    public partial class Chapter : ChapterBase
     {
         public int DisplayOrder { get; set; }
         public Guid ProjectId { get; set; }

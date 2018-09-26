@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.IdentificationFiles
 {
-    public class Country : Entity
+    public partial class Country : Entity
     {
 
         public string Name

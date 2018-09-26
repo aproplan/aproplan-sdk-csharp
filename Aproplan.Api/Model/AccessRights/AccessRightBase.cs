@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.AccessRights
 {
-    public abstract class AccessRightBase : Entity
+    public abstract partial class AccessRightBase : Entity
     {
         public bool CanEdit { get; set; }
 

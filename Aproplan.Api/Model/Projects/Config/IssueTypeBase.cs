@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects.Config
 {
-    public abstract class IssueTypeBase : Entity
+    public abstract partial class IssueTypeBase : Entity
     {
         public string Code { get; set; }
 

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.List
 {
-    public class MeetingConcern : Entity
+    public partial class MeetingConcern : Entity
     {
         public User User { get; set; }
         public MeetingPresenceStatus PresenceStatus { get; set; }

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class Form : NoteBase
+    public partial class Form : NoteBase
     {
         public FormStatus Status
         {

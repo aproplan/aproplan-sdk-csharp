@@ -5,7 +5,7 @@ using System.Text;
 namespace Aproplan.Api.Model.Projects.Config
 {
 
-    public abstract class NoteProjectStatusBase : Entity
+    public abstract partial class NoteProjectStatusBase : Entity
     {
         public string Code { get; set; }
 

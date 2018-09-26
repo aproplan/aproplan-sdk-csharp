@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public abstract class FormElementBase : Entity
+    public abstract partial class FormElementBase : Entity
     {
         public int DisplayOrder
         {

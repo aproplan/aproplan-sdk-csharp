@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class FormTemplate : Entity
+    public partial class FormTemplate : Entity
     {
         public string Subject
         {

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class FormItem : FormItemBase
+    public partial class FormItem : FormItemBase
     {
         public User User
         {

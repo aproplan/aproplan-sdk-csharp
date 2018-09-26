@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Actors
 {
-    public class User: Entity
+    public partial class User : Entity
     {
         public string Alias { get; set; }
         public string DisplayName { get; set; }

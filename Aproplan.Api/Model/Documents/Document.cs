@@ -39,7 +39,7 @@ namespace Aproplan.Api.Model.Documents
     }
 
 
-    public class Document : DocumentBase
+    public partial class Document : DocumentBase
     {
 
         public Folder Folder

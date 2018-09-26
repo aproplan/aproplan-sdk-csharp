@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Actors
 {
-    public class ManagedCompany : Party
+    public partial class ManagedCompany : Party
     {
 
         public User CompanyOwner

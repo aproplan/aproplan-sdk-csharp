@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Documents
 {
-    public class Page : SheetBase
+    public partial class Page : SheetBase
     {
         public Guid DocumentId
         {

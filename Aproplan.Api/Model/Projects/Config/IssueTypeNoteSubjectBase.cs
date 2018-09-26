@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects.Config
 {
-    public abstract class IssueTypeNoteSubjectBase : Entity
+    public abstract partial class IssueTypeNoteSubjectBase : Entity
     {
         public string Subject { get; set; }
         public int DisplayOrder { get; set; }

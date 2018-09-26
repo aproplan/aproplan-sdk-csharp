@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects.Config
 {
-    public class IssueType : IssueTypeBase
+    public partial class IssueType : IssueTypeBase
     {
         public int DisplayOrder { get; set; }
         public Chapter ParentChapter { get; set; }

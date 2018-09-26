@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Actors
 {
-    public class CompanyUser: Entity
+    public partial class CompanyUser : Entity
     {
         public bool IsOwner
         {

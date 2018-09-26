@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Actors
 {
-    public abstract class Party : Entity
+    public abstract partial class Party : Entity
     {
 
         public string Code

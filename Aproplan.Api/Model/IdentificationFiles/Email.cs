@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.IdentificationFiles
 {
-    public class EmailInfo: Entity
+    public partial class EmailInfo : Entity
     {
 
         public string Email

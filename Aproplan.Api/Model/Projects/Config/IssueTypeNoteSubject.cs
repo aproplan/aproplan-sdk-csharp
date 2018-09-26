@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects.Config
 {
-    public class IssueTypeNoteSubject : IssueTypeNoteSubjectBase
+    public partial class IssueTypeNoteSubject : IssueTypeNoteSubjectBase
     {
         public IssueType IssueType
         {

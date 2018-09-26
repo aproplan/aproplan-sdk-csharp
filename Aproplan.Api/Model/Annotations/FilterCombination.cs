@@ -9,7 +9,7 @@ namespace Aproplan.Api.Model.Annotations
         And,
         Or
     }
-    public class FilterCombination : FormFilterCondition
+    public partial class FilterCombination : FormFilterCondition
     {
         public FormFilterType Type { get; set; }
 

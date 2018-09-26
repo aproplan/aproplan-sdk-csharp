@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Documents
 {
-    public abstract class SheetBase : Entity
+    public abstract partial class SheetBase : Entity
     {
         public int Width { get; set; }
 

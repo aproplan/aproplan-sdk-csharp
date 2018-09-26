@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.AccessRights
 {
-    public class ProjectAccessRight : AccessRightBase
+    public partial class ProjectAccessRight : AccessRightBase
     { 
         public bool CanConfig { get; set; }
         public bool CanAddFolder { get; set; }

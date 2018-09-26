@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class FilterProperty : FormFilterCondition
+    public partial class FilterProperty : FormFilterCondition
     {
         public bool? IsConform { get; set; }
 

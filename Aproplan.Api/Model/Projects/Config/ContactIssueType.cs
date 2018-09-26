@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects.Config
 {
-    public class ContactIssueType : Entity
+    public partial class ContactIssueType : Entity
     {
         public Guid ContactId
         {

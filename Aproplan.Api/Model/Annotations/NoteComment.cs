@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class NoteComment : Entity
+    public partial class NoteComment : Entity
     {
         public Note Note
         {

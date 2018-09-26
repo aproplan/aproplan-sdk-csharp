@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class FormSectionRule : FormSectionBase
+    public partial class FormSectionRule : FormSectionBase
     {
         public Guid? FormTemplateId
         {

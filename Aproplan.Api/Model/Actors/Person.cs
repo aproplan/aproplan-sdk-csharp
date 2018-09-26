@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Actors
 {
-    public class Person: Party
+    public partial class Person : Party
     {
         public Language SpellCheckLanguage
         {

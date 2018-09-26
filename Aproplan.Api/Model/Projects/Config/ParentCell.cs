@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Projects.Config
 {
-    public class ParentCell : CellBase
+    public partial class ParentCell : CellBase
     {
         public Guid ProjectId { get; set; }
 

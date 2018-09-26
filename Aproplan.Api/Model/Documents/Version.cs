@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Documents
 {
-    public class Version : DocumentBase
+    public partial class Version : DocumentBase
     {
         public Guid DocumentId
         {

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class NoteProcessStatusHistory : Entity
+    public partial class NoteProcessStatusHistory : Entity
     {
         public User User { get; set; }
 

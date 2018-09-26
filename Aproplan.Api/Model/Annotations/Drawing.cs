@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    public class Drawing : Entity
+    public partial class Drawing : Entity
     {
         public Guid NoteCommentId
         {

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.IdentificationFiles
 {
-    public class Phone : Entity
+    public partial class Phone : Entity
     {
 
         public string Number

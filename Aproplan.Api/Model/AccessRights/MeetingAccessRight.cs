@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.AccessRights
 {
-    public class MeetingAccessRight : AccessRightBase
+    public partial class MeetingAccessRight : AccessRightBase
     {
         public MeetingAccessRight()
             : base()

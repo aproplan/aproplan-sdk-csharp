@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aproplan.Api.Model.IdentificationFiles
 {
-    public class Profession
+    public partial class Profession
     {
         public string Code
         {
