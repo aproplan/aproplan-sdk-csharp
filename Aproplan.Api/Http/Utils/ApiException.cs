@@ -15,12 +15,15 @@ namespace Aproplan.Api.Http.Utils
 
         public int ReturnCode { get; private set; }
 
+        public string ErrorId { get; private set; }
+
         #endregion
         #region Constructors
 
         public ApiException(string message = null, string code = null, string id = null, string url = null, int returnCode = -1, string method = null, Exception innerException = null): base(message, innerException)
         {
             Code = code;
+            ErrorId = id;
             ReturnCode = returnCode;
             Url = url;
             Method = method;
