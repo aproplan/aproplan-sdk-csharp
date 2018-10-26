@@ -121,14 +121,20 @@ namespace Aproplan.Api.Http
                 {
                     throw new ApiException("Your login or password is not correct", "INVALID_CREDENTIALS", null,  url, 401, "POST");
                 }
-                JObject jsonLogin = (JObject)JsonConvert.DeserializeObject(res);
+                JObject jsonLogin = (JObject)JsonConvert.DeserializeObject(res, new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Local
+                });
                 TokenInfo = new TokenInfo();
                 TokenInfo.Token = Guid.Parse(jsonLogin["Token"].Value<string>());
                 TokenInfo.ValidityStart = jsonLogin["ValidityStart"].Value<DateTime>();
                 TokenInfo.ValidityLimit = jsonLogin["ValidityLimit"].Value<DateTime>();
 
                 
-                user = JsonConvert.DeserializeObject<User>(jsonLogin["UserInfo"].ToString());
+                user = JsonConvert.DeserializeObject<User>(jsonLogin["UserInfo"].ToString(), new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Local
+                });
                 RenewTokenLoop(Convert.ToInt32(TokenInfo.ValidityLimit.Subtract(DateTime.Now.ToUniversalTime()).TotalMilliseconds - 120000));
             }
             finally
@@ -176,7 +182,10 @@ namespace Aproplan.Api.Http
             {
                 Console.WriteLine("Renew token call...");
                 string res = await Request(ApiRootUrl + "renewtoken", ApiMethod.Get, null, null);
-                TokenInfo = JsonConvert.DeserializeObject<TokenInfo>(res);
+                TokenInfo = JsonConvert.DeserializeObject<TokenInfo>(res, new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Local
+                });
                 Console.WriteLine("Renew token :" + TokenInfo.ValidityLimit.ToShortTimeString());
                 RenewTokenLoop(Convert.ToInt32(TokenInfo.ValidityLimit.Subtract(DateTime.Now.ToUniversalTime()).TotalMilliseconds - 120000));
             }
@@ -205,7 +214,10 @@ namespace Aproplan.Api.Http
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
             string res = await GetRaw(resourceName, filter, pathToLoad);
-            var entityList = JsonConvert.DeserializeObject<List<T>>(res);
+            var entityList = JsonConvert.DeserializeObject<List<T>>(res, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Local
+            });
             return entityList;
         }
 
@@ -260,7 +272,10 @@ namespace Aproplan.Api.Http
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.Ids);
             string res = await GetRaw(resourceName, filter, pathToLoad);
-            var ids = JsonConvert.DeserializeObject<List<Guid>>(res);
+            var ids = JsonConvert.DeserializeObject<List<Guid>>(res, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Local
+            });
             return ids;
         }
 
@@ -294,7 +309,10 @@ namespace Aproplan.Api.Http
             };
 
             string response = await Request(url, ApiMethod.Post, queryParams, data);
-            return JsonConvert.DeserializeObject<User>(response);
+            return JsonConvert.DeserializeObject<User>(response, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Local
+            });
         }
 
         /// <summary>
@@ -365,7 +383,10 @@ namespace Aproplan.Api.Http
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
             string url = ApiRootUrl + resourceName;
-            await Request(url, ApiMethod.Delete, null, JsonConvert.SerializeObject(ids));
+            await Request(url, ApiMethod.Delete, null, JsonConvert.SerializeObject(ids, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            }));
             return true;
         }
 
@@ -405,11 +426,17 @@ namespace Aproplan.Api.Http
             string response = null;
             ApiMethod method = isCreation ? ApiMethod.Post : ApiMethod.Put;
             if (entities != null && entities.Length > 0)
-                response = await Request(url, method, queryParams, JsonConvert.SerializeObject(entities));
+                response = await Request(url, method, queryParams, JsonConvert.SerializeObject(entities, new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc
+                }));
 
             T[] resEntities = null;
             if (!String.IsNullOrEmpty(response))
-                resEntities = JsonConvert.DeserializeObject<T[]>(response);
+                resEntities = JsonConvert.DeserializeObject<T[]>(response, new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Local
+                });
             return resEntities;
         }
 
@@ -444,7 +471,7 @@ namespace Aproplan.Api.Http
 
         private bool IsTokenValid()
         {
-            bool retVal = TokenInfo != null && TokenInfo.ValidityLimit < DateTime.Now;            
+            bool retVal = TokenInfo != null && DateTime.Now < TokenInfo.ValidityLimit;
             return retVal;
         }
         
@@ -545,7 +572,10 @@ namespace Aproplan.Api.Http
                         string res = streamRes.ReadToEnd();
                         if (ex.Response.ContentType.Contains("application/json"))
                         {
-                            JArray json = JsonConvert.DeserializeObject<JArray>(res);
+                            JArray json = JsonConvert.DeserializeObject<JArray>(res, new JsonSerializerSettings
+                            {
+                                DateTimeZoneHandling = DateTimeZoneHandling.Local
+                            });
                             JToken item = json.First;
                             IEnumerable<JProperty> properties = item.Children<JProperty>();
                             var element = properties.FirstOrDefault(x => x.Name == "Message");
