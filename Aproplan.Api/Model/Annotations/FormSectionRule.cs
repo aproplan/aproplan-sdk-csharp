@@ -20,5 +20,16 @@ namespace Aproplan.Api.Model.Annotations
         {
             get; set;
         }
+
+        public FormSection ToSection(Guid formId)
+        {
+            return new FormSection
+            {
+                Id = Guid.NewGuid(),
+                FormId = formId,
+                SectionRuleId = this.Id,
+                DisplayOrder = this.DisplayOrder
+            };
+        }
     }
 }

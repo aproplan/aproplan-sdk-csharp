@@ -91,7 +91,7 @@ namespace Aproplan.Api.Http.Services
 
             
 
-            string docJson = await Requester.Request(Requester.ApiRootUrl + "uploaddocument", ApiMethod.Post, queryParams, filePath, true);
+            string docJson = (await Requester.Request(Requester.ApiRootUrl + "uploaddocument", ApiMethod.Post, queryParams, filePath, true)).Data;
             return JsonConvert.DeserializeObject<Document>(docJson);
         }
 

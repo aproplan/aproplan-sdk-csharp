@@ -27,7 +27,7 @@ namespace Aproplan.Api.Http.Services
             if (!String.IsNullOrEmpty(folderType))
                 queryParams.Add("foldertype", folderType);
 
-            string dataJson = await Requester.Request(Requester.ApiRootUrl + "projectfolderidsandlevels", ApiMethod.Get, queryParams);
+            string dataJson = (await Requester.Request(Requester.ApiRootUrl + "projectfolderidsandlevels", ApiMethod.Get, queryParams)).Data;
             return JsonConvert.DeserializeObject<List<FolderIdLevel>>(dataJson);
         }
 

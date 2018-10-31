@@ -65,5 +65,10 @@ namespace Aproplan.Api.Model.Annotations
         {
             get; set;
         }
+
+        public FormTemplate Template // THIS SHOULD BE REMOVED ; used temporary 
+        {
+            get; set; 
+        }
     }
 }

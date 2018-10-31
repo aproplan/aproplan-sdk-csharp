@@ -1,12 +1,13 @@
 ﻿using Aproplan.Api.Model.Actors;
 using Aproplan.Api.Model.IdentificationFiles;
+using Aproplan.Api.Model.Projects.Config;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Aproplan.Api.Model.Projects
 {
-    public partial class ContactDetails
+    public partial class ContactDetails: Entity 
     {
         public string City
         {
@@ -109,6 +110,7 @@ namespace Aproplan.Api.Model.Projects
             set;
         }
 
+        public List<LinkedIssueType> LinkedIssueTypes { get; set; }
 
         private Project _project;
     }

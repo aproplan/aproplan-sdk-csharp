@@ -27,5 +27,21 @@ namespace Aproplan.Api.Model.Annotations
         {
             get; set;
         }
+
+        public FormItem ToFormItem(Guid formId, List<FormSection> sections)
+        {
+            Guid sectionId = sections.Find(x => x.SectionRuleId == this.SectionRuleId).Id; 
+
+            return new FormItem
+            {
+                FormId = formId,
+                Template = this.Template,
+                SectionId = sectionId,
+                QuestionId = this.Id, 
+                DisplayOrder= this.DisplayOrder, 
+                Title = this.Title, 
+                ItemType = this.ItemType
+            };
+        }
     }
 }
