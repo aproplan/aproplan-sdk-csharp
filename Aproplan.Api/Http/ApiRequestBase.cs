@@ -136,7 +136,8 @@ namespace Aproplan.Api.Http
                 {
                     DateTimeZoneHandling = DateTimeZoneHandling.Local
                 });
-                RenewTokenLoop(Convert.ToInt32(TokenInfo.ValidityLimit.Subtract(DateTime.Now.ToUniversalTime()).TotalMilliseconds - 120000));
+                TimeSpan tokenValidityPeriod = TokenInfo.ValidityLimit.ToUniversalTime().Subtract(DateTime.Now.ToUniversalTime()); 
+                RenewTokenLoop(Convert.ToInt32(tokenValidityPeriod.TotalMilliseconds - 60000*2));
             }
             finally
             {
@@ -166,11 +167,10 @@ namespace Aproplan.Api.Http
         {
             if (_renewTimer != null)
                 _renewTimer.Dispose();
-            _renewTimer = new Timer((obj) =>
+            _renewTimer = new Timer(async (obj) =>
             {
-                RenewToken();
+                await RenewToken();
             }, null, msDuration, Timeout.Infinite);
-
         }
 
         /// <summary>
@@ -188,7 +188,8 @@ namespace Aproplan.Api.Http
                     DateTimeZoneHandling = DateTimeZoneHandling.Local
                 });
                 Console.WriteLine("Renew token :" + TokenInfo.ValidityLimit.ToShortTimeString());
-                RenewTokenLoop(Convert.ToInt32(TokenInfo.ValidityLimit.Subtract(DateTime.Now.ToUniversalTime()).TotalMilliseconds - 120000));
+                TimeSpan tokenValidityPeriod = TokenInfo.ValidityLimit.ToUniversalTime().Subtract(DateTime.Now.ToUniversalTime());
+                RenewTokenLoop(Convert.ToInt32(tokenValidityPeriod.TotalMilliseconds - 60000 * 2));
             }
             catch(Exception)
             {
@@ -432,9 +433,9 @@ namespace Aproplan.Api.Http
             {
                 resourceName = GetEntityResourceName<T>(GetEntityResourceType.Sync);
             }
-            WebHeaderCollection additionalHeaders = new WebHeaderCollection();
-            additionalHeaders["SyncTimestamp"] = continuationToken; 
-            HttpResponse res = await GetRaw(resourceName, null, null, additionalHeaders);
+            IDictionary<String, String> additionalParams = new Dictionary<String, String>();
+            additionalParams["timestamp"] = continuationToken; 
+            HttpResponse res = await GetRaw(resourceName, null, null, additionalParams);
             var entityList = JsonConvert.DeserializeObject<List<T>>(res.Data, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Local
@@ -455,14 +456,23 @@ namespace Aproplan.Api.Http
         /// <param name="pathToLoad">The linked property to load in the same time</param>
         /// <param name="additionalHeaders">Additional headers to add to the HTTP request</param>
         /// <returns></returns>
-        public async Task<HttpResponse> GetRaw(string resourceName, Filter filter, PathToLoad pathToLoad, WebHeaderCollection additionalHeaders=null)
+        public async Task<HttpResponse> GetRaw(string resourceName, Filter filter, PathToLoad pathToLoad, IDictionary<String, String> additionalParams =null)
         {
             Dictionary<string, string> queryParams = new Dictionary<string, string>();
             if (filter != null)
                 queryParams.Add("filter", filter.ToString());
             if (pathToLoad != null)
                 queryParams.Add("pathtoload", pathToLoad.ToString());
-            return await Request(ApiRootUrl + resourceName, ApiMethod.Get, queryParams, additionalHeaders:additionalHeaders);
+
+            if (additionalParams != null)
+            {
+                foreach (String key in additionalParams.Keys)
+                {
+                    queryParams.Add(key, additionalParams[key]);
+                }
+            }
+
+            return await Request(ApiRootUrl + resourceName, ApiMethod.Get, queryParams);
         }
 
         private async Task<T[]> CreateOrUpdateEntities<T>(T[] entities, bool isCreation, Dictionary<string, string> queryParams = null) where T : Entity
@@ -535,7 +545,7 @@ namespace Aproplan.Api.Http
         /// <param name="isFile">To know if the data is a file path or not</param>
         /// <param name="additionalHeaders">Additional headers to add to the HTTP call</param>
         /// <returns>The response of the request as a string</returns>
-        public async Task<HttpResponse> Request(string uri, ApiMethod method, Dictionary<string, string> queryParams = null, string data = null, bool isFile = false, WebHeaderCollection additionalHeaders=null)
+        public async Task<HttpResponse> Request(string uri, ApiMethod method, Dictionary<string, string> queryParams = null, string data = null, bool isFile = false)
         {
             int nb = 0;
             if (uri != _resourceRenew)
@@ -563,13 +573,6 @@ namespace Aproplan.Api.Http
             
             WebRequest request = WebRequest.Create(uriBuilder.Uri);
             request.Method = method.ToString().ToUpperInvariant();
-            if(additionalHeaders != null)
-            {
-                foreach(var headerName in additionalHeaders.AllKeys)
-                {
-                    request.Headers[headerName] = additionalHeaders[headerName]; 
-                }
-            }
 
             Stream stream;
             //stream = request.GetRequestStream();
