@@ -301,8 +301,9 @@ namespace Aproplan.Api.Http
         /// <param name="password">The password of the new user to apply</param>
         /// <param name="queryParams">Parameters to send in the create user call</param>
         /// <returns>The new user created</returns>
-        public async Task<User> CreateUser(User newUser, string password, Dictionary<string, string> queryParams)
+        private async Task<User> CreateUser(User newUser, string password, Dictionary<string, string> queryParams)
         {
+            // EDIT: This method is private, since it cannot work without a captcha response
             string url = ApiRootUrl + GetEntityResourceName<User>(GetEntityResourceType.List);
             dynamic data = new
             {
@@ -310,8 +311,8 @@ namespace Aproplan.Api.Http
                 pass = password
             };
 
-            string response = await Request(url, ApiMethod.Post, queryParams, data);
-            return JsonConvert.DeserializeObject<User>(response, new JsonSerializerSettings
+            HttpResponse response = await Request(url, ApiMethod.Post, queryParams, JsonConvert.SerializeObject(data));
+            return JsonConvert.DeserializeObject<User>(response.Data, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Local
             });
@@ -550,7 +551,7 @@ namespace Aproplan.Api.Http
             int nb = 0;
             if (uri != _resourceRenew)
             {
-                if ((RequestLoginState == RequestLoginState.NotConnected || !IsTokenValid()) && !_resourcesWithoutConnection.Contains(uri))
+                if ((RequestLoginState == RequestLoginState.NotConnected || !IsTokenValid()) && !_resourcesWithoutConnection.Contains(new Tuple<ApiMethod, String>(method, uri)))
                     throw new ApiException("Cannot call API without to be connected", "NOT_CONNECTED", null, uri, -1, method.ToString(), null);
             }
             if (!_resourcesLogin.Contains(uri) && uri != _resourceRenew)
@@ -711,17 +712,18 @@ namespace Aproplan.Api.Http
                 apiVersion = DefaultApiVersion;
                 
             ApiRootUrl = rootUrl[rootUrl.Length - 1] == '/' ? rootUrl + "rest/": rootUrl + "/rest/";
-            _resourcesWithoutConnection = new List<string>
+            _resourcesWithoutConnection = new List<Tuple<ApiMethod, string>>
             {
-                ApiRootUrl + "countries",
-                ApiRootUrl + "countriesids",
-                ApiRootUrl + "countrycount",
-                ApiRootUrl + "languages",
-                ApiRootUrl + "languagesids",
-                ApiRootUrl + "languagecount",
-                ApiRootUrl + "loginwithfullinfosecure",
-                ApiRootUrl + "loginsecure",
-                ApiRootUrl + "simpleloginsecure"
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countries"),
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countriesids"),
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countrycount"),
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "languages"),
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "languagesids"),
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "languagecount"),
+                new Tuple<ApiMethod, String>(ApiMethod.Post, ApiRootUrl + "loginwithfullinfosecure"),
+                new Tuple<ApiMethod, String>(ApiMethod.Post, ApiRootUrl + "loginsecure"),
+                new Tuple<ApiMethod, String>(ApiMethod.Post, ApiRootUrl + "simpleloginsecure"),
+                new Tuple<ApiMethod, String>(ApiMethod.Post, ApiRootUrl + "users")
             };
             _resourcesLogin = new List<string>
             {
@@ -750,7 +752,7 @@ namespace Aproplan.Api.Http
         Timer _renewTimer;
         bool _isRenewingToken = false;
         bool _isConnecting = false;
-        readonly List<string> _resourcesWithoutConnection;
+        readonly List<Tuple<ApiMethod, string>> _resourcesWithoutConnection;
         readonly List<string> _resourcesLogin;
         readonly string _resourceRenew;
 
