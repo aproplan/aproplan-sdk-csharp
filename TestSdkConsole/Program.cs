@@ -55,6 +55,8 @@ namespace TestSdkConsole
                     foreach (var idLevel in idLevels)
                         Console.WriteLine(idLevel.Id + " - " + idLevel.Level);
 
+                    request.RenewToken().GetAwaiter();
+
                 }
                 catch(ApiException ex)
                 {
