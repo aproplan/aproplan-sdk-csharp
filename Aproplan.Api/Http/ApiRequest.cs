@@ -439,14 +439,15 @@ namespace Aproplan.Api.Http
         public async Task<SyncResult<Document>> SyncAttachmentDocuments(String continuationToken) { return await this.SyncEntity<Document>(continuationToken, "attachmentdocumentsync"); }
         public async Task<SyncResult<Document>> SyncFolderDocuments(String continuationToken) { return await this.SyncEntity<Document>(continuationToken, "folderdocumentsync"); }
 
-
         /// <summary>
-        /// To get all the changes to an entity since a specified point in time
+        /// To get all the changes of an entity since a specified point in time
         /// </summary>
-        /// <typeparam name="T">Kind of entity to sync</typeparam>
-        /// <param name="continuationToken">Opaque token specifying the point in time we should sync from</param>
-        /// <returns></returns>
-        protected async Task<SyncResult<T>> SyncEntity<T>(String continuationToken, String forcedResourceName = null) where T : Entity
+        /// <typeparam name="T">Kind of entity to get</typeparam>
+        /// <param name="syncStamp">This is the stamp from when the sync need to get differences. If not specified, it means to get data from the beginning. 
+        /// Else it corresponds to the last sync done. Value returned in the SyncTimestamp property of the response headers</param>
+        /// <param name="forcedResourceName">IF the end point to use is not really the name of the entity, you can specify the name of the resource endpoint to use</param>
+        /// <returns>A SyncResult containing the data from the syncStamp you specified and until a new SyncStamp specified in ContinuationToken</returns>
+        protected async Task<SyncResult<T>> SyncEntity<T>(String syncStamp, String forcedResourceName = null) where T : Entity
         {
             string resourceName = forcedResourceName;
             if (resourceName == null)
@@ -454,7 +455,7 @@ namespace Aproplan.Api.Http
                 resourceName = GetEntityResourceName<T>(GetEntityResourceType.Sync);
             }
             IDictionary<String, String> additionalParams = new Dictionary<String, String>();
-            additionalParams["timestamp"] = continuationToken;
+            additionalParams["timestamp"] = syncStamp;
             HttpResponse res = await GetRaw(resourceName, null, null, additionalParams);
             var entityList = JsonConvert.DeserializeObject<List<T>>(res.Data, new JsonSerializerSettings
             {
