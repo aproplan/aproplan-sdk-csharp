@@ -9,15 +9,159 @@ using Aproplan.Api.Http;
 using Aproplan.Api.Http.Services;
 using Aproplan.Api.Http.Utils;
 using Aproplan.Api.Model;
+using Aproplan.Api.Model.Annotations;
 using Aproplan.Api.Model.Documents;
 using Aproplan.Api.Model.IdentificationFiles;
+using Aproplan.Api.Model.List;
 using Aproplan.Api.Model.Projects;
+using Aproplan.Api.Model.Projects.Config;
 
 namespace TestSdkConsole
 {
     class Program
     {
-        static void Main(string[] args)
+        private static ApiRequest Api;
+        static void Main(String[] args)
+        {
+            Api = new ApiRequest(new Guid("EFCF4D2E-70BD-4BCE-B81B-CBED37F6F7F3"), "https://api-tst.aproplan.com/");
+
+            Task t = mainLoop();
+            t.Wait(); 
+        }
+
+        private static async Task mainLoop()
+        {
+            showMenu(); 
+
+            String choice = "";
+            while (!(choice = Console.ReadLine()).Contains("exit"))
+            {
+                try
+                {
+
+                    switch (choice.Split(new[] { ' '}, StringSplitOptions.RemoveEmptyEntries).First())
+                    {
+                        case "?":
+                            showMenu();
+                            break; 
+                        case "login":
+                            await Api.Login("sergio.ristagno@aproplan.com", "aproplan");
+                            Console.WriteLine("success"); 
+                            break;
+                        case "logout":
+                            Api.Logout();
+                            break;
+                        case "projects": 
+                            foreach(Project p in await Api.GetEntityList<Project>())
+                            {
+                                Console.WriteLine(p.Id + " " + p.Name);
+                            }
+                            break;
+                        case "lists":
+                            foreach (Meeting p in await Api.GetEntityList<Meeting>())
+                            {
+                                Console.WriteLine(p.Id + " " + p.Title);
+                            }
+                            break;
+                        case "randompoint_create":
+                            Project pointProject = (await Api.GetEntityList<Project>())[0]; 
+                            Meeting list = (await Api.GetEntityList<Meeting>(filter: Filter.Eq("Project.Id", pointProject.Id)))[0];
+                            NoteProjectStatus status = (await Api.GetEntityList<NoteProjectStatus>(filter: Filter.Eq("Project.Id", pointProject.Id)))[0];
+
+
+                            Note newNote = new Note
+                            {
+                                Id = Guid.NewGuid(), 
+                                Subject = "Sample subject", 
+                                Meeting = list, 
+                                Project = pointProject, 
+                                From = Api.CurrentUser, 
+                                Status = status
+                            };
+
+                            Note createdNote = await Api.CreateEntity<Note>(newNote);
+                            Console.WriteLine("Point created");
+                            Console.WriteLine("  " + createdNote.EntityCreationDate);
+                            Console.WriteLine("  " + createdNote.EntityCreationUser);
+                            break;
+                        case "randomform_create":
+                            Project formProject = (await Api.GetEntityList<Project>())[0];
+                            Meeting formList = (await Api.GetEntityList<Meeting>(filter: Filter.Eq("Project.Id", formProject.Id)))[0];
+                            FormTemplate template = (await Api.GetEntityList<FormTemplate>(pathToLoad: new PathToLoad("Questions,SectionRules,Language")))[0];
+
+                            Form newForm = new Form
+                            {
+                                Id = Guid.NewGuid(),
+                                Subject = "Sample subject",
+                                Meeting = formList,
+                                Project = formProject,
+                                From = Api.CurrentUser,
+                                TemplateId = template.Id 
+                            };
+
+
+                            FormSection[] sections = new FormSection[template.SectionRules.Count];
+                            for (int i = 0; i < template.SectionRules.Count; i++)
+                            {
+                                sections[i] = template.SectionRules[i].ToSection(newForm.Id);
+                            }
+                            newForm.Sections = sections.ToList(); 
+
+
+                            FormItem[] items = new FormItem[template.Questions.Count];
+                            for (int i = 0; i < template.Questions.Count; i++)
+                            {
+                                items[i] = template.Questions[i].ToFormItem(newForm.Id, newForm.Sections);
+                            }
+                            newForm.Items = items.ToList();
+
+                            newForm.Language = template.Language; 
+
+                            Form createdForm = await Api.CreateEntity<Form>(newForm);
+                            Console.WriteLine("Form created");
+                            Console.WriteLine("  " + createdForm.EntityCreationDate);
+                            Console.WriteLine("  " + createdForm.EntityCreationUser);
+                            break;
+                        default:
+                            Console.WriteLine("Unknown command...");
+                            showMenu();
+                            break; 
+                    }
+                }
+                catch(ApiException e)
+                {
+                    Console.WriteLine("API Exception raised: ");
+                    Console.WriteLine("  " + e.Code);
+                    Console.WriteLine("  " + e.ErrorId);
+                    Console.WriteLine("  " + e.Message);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Other exception raised: ");
+                    Console.WriteLine(e.Message);
+                }
+
+                Console.WriteLine(""); 
+                Console.WriteLine("----------------------------------");
+            }
+        }
+
+        private static void showMenu()
+        {
+            Console.WriteLine("Type any of the following commands");
+            Console.WriteLine("   ?         - Show this help"); 
+            Console.WriteLine("   exit      - quit program"); 
+            Console.WriteLine("   login     - Log into aproplan"); 
+            Console.WriteLine("   logout    - Log out of aproplan"); 
+            Console.WriteLine("   projects  - Display my projects"); 
+            Console.WriteLine("   lists     - Display my lists"); 
+            Console.WriteLine("   randompoint_create - Create a random point");
+            Console.WriteLine("   randomform_create - Create a random form");
+            Console.WriteLine(""); 
+            Console.WriteLine(""); 
+        }
+
+        /*static void Main(string[] args)
         {
             using (ApiRequest request = new ApiRequest(new Guid("EFCF4D2E-70BD-4BCE-B81B-CBED37F6F7F3"), "https://api-tst.aproplan.com/"))
             {
@@ -68,6 +212,6 @@ namespace TestSdkConsole
                 }
                 Console.ReadLine();
             }
-        }
+        }*/
     }
 }
