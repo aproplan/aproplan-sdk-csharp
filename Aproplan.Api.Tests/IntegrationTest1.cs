@@ -115,7 +115,7 @@ namespace Aproplan.Api.Tests
             NewPoint.Status = Status.FindLast(x => x.Project.Id == Projects[0].Id);
             NewPoint.ModifiedProperties = new[] { "Subject", "Status" }; 
             NewPoint = await Api.UpdateEntity<Note>(NewPoint);
-            NewPoint = await Api.GetEntityById<Note>(NewPoint.Id, new Http.Utils.PathToLoad("Project,Status,Meeting,From,ProcessStatusHistories")); 
+            NewPoint = await Api.GetEntityById<Note>(NewPoint.Id, Projects[0].Id, new Http.Utils.PathToLoad("Project,Status,Meeting,From,ProcessStatusHistories")); 
 
             Assert.AreEqual(NewPoint.Subject, "Subject edited");
             Assert.IsTrue(NewPoint.ProcessStatusHistories.Count > 1);

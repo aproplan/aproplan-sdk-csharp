@@ -37,9 +37,9 @@ namespace Aproplan.Api.Http.Services
         /// <param name="folderId">The folder id where the document must be uploaded in the project</param>
         /// <param name="nameDocument">The name of the document to set into APROPLAN</param>
         /// <returns></returns>
-        public async Task<Document> UploadNewDocument(string filePath, Guid folderId, string nameDocument = null)
+        public async Task<Document> UploadNewDocument(Guid projectId, string filePath, Guid folderId, string nameDocument = null)
         {
-            return await UploadDocumentOrVersion(UploadFileType.Working, filePath, folderId, nameDocument);
+            return await UploadDocumentOrVersion(projectId, UploadFileType.Working, filePath, folderId, nameDocument);
         }
 
         /// <summary>
@@ -48,10 +48,10 @@ namespace Aproplan.Api.Http.Services
         /// <param name="filePath">The path of the file to upload</param>
         /// <param name="document">The document on which the source file must be attached</param>
         /// <returns></returns>
-        public async Task<Document> UploadSourceToDocument(string filePath, Document document)
+        public async Task<Document> UploadSourceToDocument(Guid projectId, string filePath, Document document)
         {
             
-            return await UploadDocumentOrVersion(UploadFileType.Source, filePath, null, null, document.Id, document.VersionCount == 0 ? UploadTarget.Document : UploadTarget.Version, UploadAction.Join);
+            return await UploadDocumentOrVersion(projectId, UploadFileType.Source, filePath, null, null, document.Id, document.VersionCount == 0 ? UploadTarget.Document : UploadTarget.Version, UploadAction.Join);
         }
 
         /// <summary>
@@ -62,18 +62,19 @@ namespace Aproplan.Api.Http.Services
         /// <param name="documentName">The new name of the document to set into APROPLAN if need to be changed</param>
         /// <param name="uploadFileType">To know if the new version is for working file or source file</param>
         /// <returns></returns>
-        public async Task<Document> UploadVersion(Guid documentId, string filePath, string documentName = null, UploadFileType uploadFileType = UploadFileType.Working)
+        public async Task<Document> UploadVersion(Guid projectId, Guid documentId, string filePath, string documentName = null, UploadFileType uploadFileType = UploadFileType.Working)
         {
-            return await UploadDocumentOrVersion(uploadFileType, filePath, null, documentName, documentId, UploadTarget.Version, UploadAction.Add);
+            return await UploadDocumentOrVersion(projectId, uploadFileType, filePath, null, documentName, documentId, UploadTarget.Version, UploadAction.Add);
         }
 
-        private async Task<Document> UploadDocumentOrVersion(UploadFileType uploadFileType, string filePath, Guid? folderId = null, string nameDocument = null, Guid? documentId = null, UploadTarget target = UploadTarget.Document, UploadAction action = UploadAction.Add)
+        private async Task<Document> UploadDocumentOrVersion(Guid projectId, UploadFileType uploadFileType, string filePath, Guid? folderId = null, string nameDocument = null, Guid? documentId = null, UploadTarget target = UploadTarget.Document, UploadAction action = UploadAction.Add)
         {
             Dictionary<string, string> queryParams = new Dictionary<string, string>
             {
                 { "file", uploadFileType.ToString().ToLowerInvariant()},
                 { "action", action.ToString().ToLowerInvariant()},
                 { "target", target.ToString().ToLowerInvariant()},
+                { "projectid", projectId.ToString().ToLowerInvariant() }
             };
             if(target == UploadTarget.Document && action == UploadAction.Add)
             {

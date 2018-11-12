@@ -40,7 +40,7 @@ namespace TestSdkConsole
 
                     //Console.WriteLine(project.Id + " - " + project.Name);
 
-                    var listProj = request.GetEntityList<Project>(Filter.IsTrue("IsActive")).GetAwaiter().GetResult();
+                    var listProj = request.GetEntityList<Project>(null, Filter.IsTrue("IsActive")).GetAwaiter().GetResult();
                     foreach(var project in listProj)
                         Console.WriteLine(project.Id + " - " + project.Name);
 

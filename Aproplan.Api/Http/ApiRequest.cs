@@ -215,10 +215,10 @@ namespace Aproplan.Api.Http
         /// <param name="filter">The filter to apply</param>
         /// <param name="pathToLoad">To know which property to load from the entity</param>
         /// <returns>The list of entities corresponding to criteria</returns>
-        public async Task<List<T>> GetEntityList<T>(Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<List<T>> GetEntityList<T>(Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
-            string res = (await GetRaw(resourceName, filter, pathToLoad)).Data;
+            string res = (await GetRaw(resourceName, filter, pathToLoad, projectId)).Data;
             var entityList = JsonConvert.DeserializeObject<List<T>>(res, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Local
@@ -233,9 +233,9 @@ namespace Aproplan.Api.Http
         /// <param name="id">The id of the entity to retrieve</param>
         /// <param name="pathToLoad">To know which property to load from the entity</param>
         /// <returns>The entity corresponding to the id</returns>
-        public async Task<T> GetEntityById<T>(Guid id, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<T> GetEntityById<T>(Guid id, Guid? projectId = null, PathToLoad pathToLoad = null) where T : Entity
         {
-            List<T> entities = await GetEntityList<T>(Filter.Eq("Id", id), pathToLoad);
+            List<T> entities = await GetEntityList<T>(projectId, Filter.Eq("Id", id), pathToLoad);
 
             if (entities.Count == 1)
                 return entities[0];
@@ -249,11 +249,11 @@ namespace Aproplan.Api.Http
         /// <param name="ids">The list of id to retrieve of the specific entity type</param>
         /// <param name="pathToLoad">To know which property to load from the entity</param>
         /// <returns>The list of entities corresponding to the list of id</returns>
-        public async Task<List<T>> GetEntityByIds<T>(Guid[] ids, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<List<T>> GetEntityByIds<T>(Guid[] ids, Guid? projectId = null, PathToLoad pathToLoad = null) where T : Entity
         {
             if (ids.Length == 1)
             {
-                T entity = await GetEntityById<T>(ids[0], pathToLoad);
+                T entity = await GetEntityById<T>(ids[0], projectId, pathToLoad);
                 return new List<T>() { entity };
             }
             object[] idsObj = new object[ids.Length];
@@ -262,7 +262,7 @@ namespace Aproplan.Api.Http
             {
                 idsObj[i++] = id;
             }
-            List<T> entities = await GetEntityList<T>(Filter.In("Id", idsObj));
+            List<T> entities = await GetEntityList<T>(projectId, Filter.In("Id", idsObj));
             return entities;
         }
 
@@ -273,10 +273,10 @@ namespace Aproplan.Api.Http
         /// <param name="filter">The filter to apply</param>
         /// <param name="pathToLoad">To know which property to load from the entity</param>
         /// <returns>The list of ids corresponding to criteria</returns>
-        public async Task<List<Guid>> GetEntityIds<T>(Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<List<Guid>> GetEntityIds<T>(Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.Ids);
-            string res = (await GetRaw(resourceName, filter, pathToLoad)).Data;
+            string res = (await GetRaw(resourceName, filter, pathToLoad, projectId)).Data;
             var ids = JsonConvert.DeserializeObject<List<Guid>>(res, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Local
@@ -290,10 +290,10 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T"></typeparam>
         /// <param name="filter"></param>
         /// <returns></returns>
-        public async Task<int> GetEntityCount<T>(Filter filter = null) where T : Entity
+        public async Task<int> GetEntityCount<T>(Guid? projectId = null, Filter filter = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.Count);
-            string res = (await GetRaw(resourceName, filter, null)).Data;
+            string res = (await GetRaw(resourceName, filter, null, projectId)).Data;
             return int.Parse(res);
         }
 
@@ -327,9 +327,9 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of the entity to create</typeparam>
         /// <param name="entities">The list of entities to create/push in APROPLAN</param>
         /// <returns>The list of entities created</returns>
-        public async Task<T[]> CreateEntities<T>(T[] entities, Dictionary<string, string> queryParams = null) where T : Entity
+        public async Task<T[]> CreateEntities<T>(T[] entities, Guid? projectId = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
-            return await CreateOrUpdateEntities<T>(entities, true, queryParams);
+            return await CreateOrUpdateEntities<T>(entities, true, projectId, queryParams);
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of the entity to create</typeparam>
         /// <param name="entity">The entity to create</param>
         /// <returns>The entity created</returns>
-        public async Task<T> CreateEntity<T>(T entity, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<T> CreateEntity<T>(T entity, Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
         {
             T[] entities = null;
             if (entity != null)
@@ -353,7 +353,7 @@ namespace Aproplan.Api.Http
             if (pathToLoad != null)
                 queryParams.Add("pathtoload", pathToLoad.ToString());
 
-            T[] newEntities = await CreateEntities<T>(entities, queryParams);
+            T[] newEntities = await CreateEntities<T>(entities, projectId, queryParams);
             return newEntities.Length == 0 ? null : newEntities[0];
         }
 
@@ -363,10 +363,10 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of the entity to update</typeparam>
         /// <param name="entities">The list of entities to update in APROPLAN</param>
         /// <returns>The list of entities updated</returns>
-        public async Task<T[]> UpdateEntities<T>(T[] entities) where T : Entity
+        public async Task<T[]> UpdateEntities<T>(T[] entities, Guid? projectId = null) where T : Entity
         {
 
-            return await CreateOrUpdateEntities<T>(entities, false);
+            return await CreateOrUpdateEntities<T>(entities, false, projectId);
         }
 
 
@@ -376,7 +376,7 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of the entity to update</typeparam>
         /// <param name="entity">The entity to update</param>
         /// <returns>The entity updated</returns>
-        public async Task<T> UpdateEntity<T>(T entity, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<T> UpdateEntity<T>(T entity, Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
         {
             T[] entities = null;
             if (entity != null)
@@ -391,7 +391,7 @@ namespace Aproplan.Api.Http
             if (pathToLoad != null)
                 queryParams.Add("pathtoload", pathToLoad.ToString());
 
-            T[] newEntities = await UpdateEntities<T>(entities);
+            T[] newEntities = await UpdateEntities<T>(entities, projectId);
             return newEntities.Length == 0 ? null : newEntities[0];
         }
 
@@ -401,11 +401,14 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of entity to delete</typeparam>
         /// <param name="ids">The list of id of the entities to delete</param>
         /// <returns>A boolean to specify that the delete was successfull</returns>
-        public async Task<bool> DeleteEntities<T>(IEnumerable<Guid> ids) where T : Entity
+        public async Task<bool> DeleteEntities<T>(IEnumerable<Guid> ids, Guid? projectId = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
             string url = ApiRootUrl + resourceName;
-            await Request(url, ApiMethod.Delete, null, JsonConvert.SerializeObject(ids, new JsonSerializerSettings
+            IDictionary<String, String> queryParams = new Dictionary<String, String>();
+            if (projectId.HasValue)
+                queryParams.Add("projectid", projectId.Value.ToString());
+            await Request(url, ApiMethod.Delete, queryParams, JsonConvert.SerializeObject(ids, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Utc
             }));
@@ -418,26 +421,26 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of entity to delete</typeparam>
         /// <param name="id">The id of the entity to delete</param>
         /// <returns>A boolean to specify that the delete was successfull</returns>
-        public async Task<bool> DeleteEntity<T>(Guid id) where T : Entity
+        public async Task<bool> DeleteEntity<T>(Guid id, Guid? projectId = null) where T : Entity
         {
-            return await DeleteEntities<T>(new[] { id });
+            return await DeleteEntities<T>(new[] { id }, projectId);
         }
 
-        public async Task<SyncResult<Note>> SyncNotes(String continuationToken) { return await this.SyncEntity<Note>(continuationToken); }
-        public async Task<SyncResult<Form>> SyncForms(String continuationToken) { return await this.SyncEntity<Form>(continuationToken); }
-        public async Task<SyncResult<FormTemplate>> SyncFormTemplates(String continuationToken) { return await this.SyncEntity<FormTemplate>(continuationToken); }
-        public async Task<SyncResult<IssueType>> SyncIssueTypes(String continuationToken) { return await this.SyncEntity<IssueType>(continuationToken); }
-        public async Task<SyncResult<Chapter>> SyncChapters(String continuationToken) { return await this.SyncEntity<Chapter>(continuationToken); }
-        public async Task<SyncResult<SubCell>> SyncSubCells(String continuationToken) { return await this.SyncEntity<SubCell>(continuationToken); }
-        public async Task<SyncResult<ParentCell>> SyncParentCells(String continuationToken) { return await this.SyncEntity<ParentCell>(continuationToken); }
-        public async Task<SyncResult<Folder>> SyncFolders(String continuationToken) { return await this.SyncEntity<Folder>(continuationToken); }
+        public async Task<SyncResult<Note>> SyncNotes(Guid projectId, String continuationToken) { return await this.SyncEntity<Note>(continuationToken, projectId); }
+        public async Task<SyncResult<Form>> SyncForms(Guid projectId, String continuationToken) { return await this.SyncEntity<Form>(continuationToken, projectId); }
+        public async Task<SyncResult<FormTemplate>> SyncFormTemplates(Guid projectId, String continuationToken) { return await this.SyncEntity<FormTemplate>(continuationToken, projectId); }
+        public async Task<SyncResult<IssueType>> SyncIssueTypes(Guid projectId, String continuationToken) { return await this.SyncEntity<IssueType>(continuationToken, projectId); }
+        public async Task<SyncResult<Chapter>> SyncChapters(Guid projectId, String continuationToken) { return await this.SyncEntity<Chapter>(continuationToken, projectId); }
+        public async Task<SyncResult<SubCell>> SyncSubCells(Guid projectId, String continuationToken) { return await this.SyncEntity<SubCell>(continuationToken, projectId); }
+        public async Task<SyncResult<ParentCell>> SyncParentCells(Guid projectId, String continuationToken) { return await this.SyncEntity<ParentCell>(continuationToken, projectId); }
+        public async Task<SyncResult<Folder>> SyncFolders(Guid projectId, String continuationToken) { return await this.SyncEntity<Folder>(continuationToken, projectId); }
         public async Task<SyncResult<Project>> SyncProjects(String continuationToken) { return await this.SyncEntity<Project>(continuationToken); }
-        public async Task<SyncResult<ContactDetails>> SyncContactDetails(String continuationToken) { return await this.SyncEntity<ContactDetails>(continuationToken); }
-        public async Task<SyncResult<NoteProjectStatus>> SyncProjectStatus(String continuationToken) { return await this.SyncEntity<NoteProjectStatus>(continuationToken); }
-        public async Task<SyncResult<User>> SyncUsers(String continuationToken) { return await this.SyncEntity<User>(continuationToken); }
-        public async Task<SyncResult<Meeting>> SyncMeetings(String continuationToken) { return await this.SyncEntity<Meeting>(continuationToken); }
-        public async Task<SyncResult<Document>> SyncAttachmentDocuments(String continuationToken) { return await this.SyncEntity<Document>(continuationToken, "attachmentdocumentsync"); }
-        public async Task<SyncResult<Document>> SyncFolderDocuments(String continuationToken) { return await this.SyncEntity<Document>(continuationToken, "folderdocumentsync"); }
+        public async Task<SyncResult<ContactDetails>> SyncContactDetails(Guid projectId, String continuationToken) { return await this.SyncEntity<ContactDetails>(continuationToken, projectId); }
+        public async Task<SyncResult<NoteProjectStatus>> SyncProjectStatus(Guid projectId, String continuationToken) { return await this.SyncEntity<NoteProjectStatus>(continuationToken, projectId); }
+        public async Task<SyncResult<User>> SyncUsers(Guid projectId, String continuationToken) { return await this.SyncEntity<User>(continuationToken, projectId); }
+        public async Task<SyncResult<Meeting>> SyncMeetings(Guid projectId, String continuationToken) { return await this.SyncEntity<Meeting>(continuationToken, projectId); }
+        public async Task<SyncResult<Document>> SyncAttachmentDocuments(Guid projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, "attachmentdocumentsync"); }
+        public async Task<SyncResult<Document>> SyncFolderDocuments(Guid projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, "folderdocumentsync"); }
 
         /// <summary>
         /// To get all the changes of an entity since a specified point in time
@@ -447,7 +450,7 @@ namespace Aproplan.Api.Http
         /// Else it corresponds to the last sync done. Value returned in the SyncTimestamp property of the response headers</param>
         /// <param name="forcedResourceName">IF the end point to use is not really the name of the entity, you can specify the name of the resource endpoint to use</param>
         /// <returns>A SyncResult containing the data from the syncStamp you specified and until a new SyncStamp specified in ContinuationToken</returns>
-        protected async Task<SyncResult<T>> SyncEntity<T>(String syncStamp, String forcedResourceName = null) where T : Entity
+        protected async Task<SyncResult<T>> SyncEntity<T>(String syncStamp, Guid? projectId = null, String forcedResourceName = null) where T : Entity
         {
             string resourceName = forcedResourceName;
             if (resourceName == null)
@@ -456,7 +459,7 @@ namespace Aproplan.Api.Http
             }
             IDictionary<String, String> additionalParams = new Dictionary<String, String>();
             additionalParams["timestamp"] = syncStamp;
-            HttpResponse res = await GetRaw(resourceName, null, null, additionalParams);
+            HttpResponse res = await GetRaw(resourceName, null, null, projectId, additionalParams);
             var entityList = JsonConvert.DeserializeObject<List<T>>(res.Data, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Local
@@ -468,11 +471,16 @@ namespace Aproplan.Api.Http
             };
         }
 
-        private async Task<T[]> CreateOrUpdateEntities<T>(T[] entities, bool isCreation, Dictionary<string, string> queryParams = null) where T : Entity
+        private async Task<T[]> CreateOrUpdateEntities<T>(T[] entities, bool isCreation, Guid? projectId = null, IDictionary<string, string> queryParams = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
             string url = ApiRootUrl + resourceName;
             string response = null;
+            if (projectId.HasValue)
+            {
+                if (queryParams == null) queryParams = new Dictionary<string, string>();
+                queryParams.Add("projectid", projectId.Value.ToString());
+            }
             ApiMethod method = isCreation ? ApiMethod.Post : ApiMethod.Put;
             if (entities != null && entities.Length > 0)
                 response = (await Request(url, method, queryParams, JsonConvert.SerializeObject(entities, new JsonSerializerSettings
@@ -498,13 +506,15 @@ namespace Aproplan.Api.Http
         /// <param name="pathToLoad">The linked property to load in the same time</param>
         /// <param name="additionalHeaders">Additional headers to add to the HTTP request</param>
         /// <returns></returns>
-        public async Task<HttpResponse> GetRaw(string resourceName, Filter filter, PathToLoad pathToLoad, IDictionary<String, String> additionalParams = null)
+        public async Task<HttpResponse> GetRaw(string resourceName, Filter filter, PathToLoad pathToLoad, Guid? projectId = null, IDictionary<String, String> additionalParams = null)
         {
             Dictionary<string, string> queryParams = new Dictionary<string, string>();
             if (filter != null)
                 queryParams.Add("filter", filter.ToString());
             if (pathToLoad != null)
                 queryParams.Add("pathtoload", pathToLoad.ToString());
+            if (projectId.HasValue)
+                queryParams.Add("projectid", projectId.Value.ToString());
 
             if (additionalParams != null)
             {
@@ -566,7 +576,7 @@ namespace Aproplan.Api.Http
         /// <param name="isFile">To know if the data is a file path or not</param>
         /// <param name="additionalHeaders">Additional headers to add to the HTTP call</param>
         /// <returns>The response of the request as a string</returns>
-        public async Task<HttpResponse> Request(string uri, ApiMethod method, Dictionary<string, string> queryParams = null, string data = null, bool isFile = false)
+        public async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, bool isFile = false)
         {
             int nb = 0;
             if (uri != _resourceRenew)
@@ -737,6 +747,9 @@ namespace Aproplan.Api.Http
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countries"),
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countriesids"),
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countrycount"),
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "professions"),
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "professionsids"),
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "professioncount"),
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "languages"),
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "languagesids"),
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "languagecount"),
@@ -751,6 +764,8 @@ namespace Aproplan.Api.Http
                 ApiRootUrl + "loginsecure",
                 ApiRootUrl + "simpleloginsecure"
             };
+
+
             _resourceRenew = ApiRootUrl + "renewtoken";
         }
 
