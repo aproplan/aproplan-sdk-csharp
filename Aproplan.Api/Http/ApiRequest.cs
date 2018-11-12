@@ -426,21 +426,21 @@ namespace Aproplan.Api.Http
             return await DeleteEntities<T>(new[] { id }, projectId);
         }
 
-        public async Task<SyncResult<Note>> SyncNotes(Guid projectId, String continuationToken) { return await this.SyncEntity<Note>(continuationToken, projectId); }
-        public async Task<SyncResult<Form>> SyncForms(Guid projectId, String continuationToken) { return await this.SyncEntity<Form>(continuationToken, projectId); }
-        public async Task<SyncResult<FormTemplate>> SyncFormTemplates(Guid projectId, String continuationToken) { return await this.SyncEntity<FormTemplate>(continuationToken, projectId); }
-        public async Task<SyncResult<IssueType>> SyncIssueTypes(Guid projectId, String continuationToken) { return await this.SyncEntity<IssueType>(continuationToken, projectId); }
-        public async Task<SyncResult<Chapter>> SyncChapters(Guid projectId, String continuationToken) { return await this.SyncEntity<Chapter>(continuationToken, projectId); }
-        public async Task<SyncResult<SubCell>> SyncSubCells(Guid projectId, String continuationToken) { return await this.SyncEntity<SubCell>(continuationToken, projectId); }
-        public async Task<SyncResult<ParentCell>> SyncParentCells(Guid projectId, String continuationToken) { return await this.SyncEntity<ParentCell>(continuationToken, projectId); }
-        public async Task<SyncResult<Folder>> SyncFolders(Guid projectId, String continuationToken) { return await this.SyncEntity<Folder>(continuationToken, projectId); }
+        public async Task<SyncResult<Note>> SyncNotes(Guid? projectId, String continuationToken) { return await this.SyncEntity<Note>(continuationToken, projectId); }
+        public async Task<SyncResult<Form>> SyncForms(Guid? projectId, String continuationToken) { return await this.SyncEntity<Form>(continuationToken, projectId); }
+        public async Task<SyncResult<FormTemplate>> SyncFormTemplates(Guid? projectId, String continuationToken) { return await this.SyncEntity<FormTemplate>(continuationToken, projectId); }
+        public async Task<SyncResult<IssueType>> SyncIssueTypes(Guid? projectId, String continuationToken) { return await this.SyncEntity<IssueType>(continuationToken, projectId); }
+        public async Task<SyncResult<Chapter>> SyncChapters(Guid? projectId, String continuationToken) { return await this.SyncEntity<Chapter>(continuationToken, projectId); }
+        public async Task<SyncResult<SubCell>> SyncSubCells(Guid? projectId, String continuationToken) { return await this.SyncEntity<SubCell>(continuationToken, projectId); }
+        public async Task<SyncResult<ParentCell>> SyncParentCells(Guid? projectId, String continuationToken) { return await this.SyncEntity<ParentCell>(continuationToken, projectId); }
+        public async Task<SyncResult<Folder>> SyncFolders(Guid? projectId, String continuationToken) { return await this.SyncEntity<Folder>(continuationToken, projectId); }
         public async Task<SyncResult<Project>> SyncProjects(String continuationToken) { return await this.SyncEntity<Project>(continuationToken); }
-        public async Task<SyncResult<ContactDetails>> SyncContactDetails(Guid projectId, String continuationToken) { return await this.SyncEntity<ContactDetails>(continuationToken, projectId); }
-        public async Task<SyncResult<NoteProjectStatus>> SyncProjectStatus(Guid projectId, String continuationToken) { return await this.SyncEntity<NoteProjectStatus>(continuationToken, projectId); }
-        public async Task<SyncResult<User>> SyncUsers(Guid projectId, String continuationToken) { return await this.SyncEntity<User>(continuationToken, projectId); }
-        public async Task<SyncResult<Meeting>> SyncMeetings(Guid projectId, String continuationToken) { return await this.SyncEntity<Meeting>(continuationToken, projectId); }
-        public async Task<SyncResult<Document>> SyncAttachmentDocuments(Guid projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, "attachmentdocumentsync"); }
-        public async Task<SyncResult<Document>> SyncFolderDocuments(Guid projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, "folderdocumentsync"); }
+        public async Task<SyncResult<ContactDetails>> SyncContactDetails(Guid? projectId, String continuationToken) { return await this.SyncEntity<ContactDetails>(continuationToken, projectId); }
+        public async Task<SyncResult<NoteProjectStatus>> SyncProjectStatus(Guid? projectId, String continuationToken) { return await this.SyncEntity<NoteProjectStatus>(continuationToken, projectId); }
+        public async Task<SyncResult<User>> SyncUsers(Guid? projectId, String continuationToken) { return await this.SyncEntity<User>(continuationToken, projectId); }
+        public async Task<SyncResult<Meeting>> SyncMeetings(Guid? projectId, String continuationToken) { return await this.SyncEntity<Meeting>(continuationToken, projectId); }
+        public async Task<SyncResult<Document>> SyncAttachmentDocuments(Guid? projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, "attachmentdocumentsync"); }
+        public async Task<SyncResult<Document>> SyncFolderDocuments(Guid? projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, "folderdocumentsync"); }
 
         /// <summary>
         /// To get all the changes of an entity since a specified point in time
