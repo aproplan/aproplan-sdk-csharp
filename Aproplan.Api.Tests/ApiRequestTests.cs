@@ -5,17 +5,17 @@ using Aproplan.Api.Http;
 using Aproplan.Api.Http.Utils;
 using Aproplan.Api.Model.Actors;
 using Aproplan.Api.Tests.Utilities;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Moq;
 using Newtonsoft.Json;
 
 namespace Aproplan.Api.Tests
-{
-    [TestClass]
+{    
+    [TestFixture]
     public class ApiRequestTests
     {
 
-        [TestMethod]
+        [TestCase]
         public void LoginWithGoodCredentialsReturnsUser()
         {
             ApiRequest request = AproplanApiUtility.CreateRequester();
@@ -45,10 +45,11 @@ namespace Aproplan.Api.Tests
             Assert.AreEqual(json.UserInfo.Id, user.Id);
             Assert.AreEqual("john.smith@aproplan.com", requestData.alias);
             Assert.AreEqual("aproplan", requestData.pass);
+            
             mockWebRequest.Verify();
         }
 
-        [TestMethod]        
+        [TestCase]        
         public void LoginWithBadCredentialsReturnsUser()
         {
             ApiRequest request = AproplanApiUtility.CreateRequester();
@@ -80,13 +81,29 @@ namespace Aproplan.Api.Tests
             
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
+        [TestCase]
         public void LoginWithNoCredentials()
         {
             ApiRequest request = AproplanApiUtility.CreateRequester();
+            ArgumentNullException ex = Assert.Throws<ArgumentNullException>(() =>
+            {
+                request.Login().GetAwaiter().GetResult();
+            });
+            Assert.AreEqual("UserLogin", ex.ParamName);
+            
+        }
 
-            request.Login().GetAwaiter().GetResult();
+        [TestCase]
+        public void LoginWithNoPasswordCredentials()
+        {
+            ApiRequest request = AproplanApiUtility.CreateRequester();
+            
+            ArgumentNullException ex = Assert.Throws<ArgumentNullException>(() =>
+            {
+                request.Login("john.smith@aproplan.com", null).GetAwaiter().GetResult();
+            });
+            Assert.AreEqual("Password", ex.ParamName);
+
         }
     }
 }
