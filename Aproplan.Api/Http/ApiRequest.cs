@@ -117,6 +117,9 @@ namespace Aproplan.Api.Http
             string url = ApiRootUrl + "simpleloginsecure";
             try
             {
+                if (_renewTimer != null)
+                    _renewTimer.Dispose();
+
                 _isConnecting = true;
                 string data = JsonConvert.SerializeObject(loginInfo);
 
@@ -140,7 +143,8 @@ namespace Aproplan.Api.Http
                     DateTimeZoneHandling = DateTimeZoneHandling.Local
                 });
                 TimeSpan tokenValidityPeriod = TokenInfo.ValidityLimit.ToUniversalTime().Subtract(DateTime.Now.ToUniversalTime());
-                RenewTokenLoop(Convert.ToInt32(tokenValidityPeriod.TotalMilliseconds - 60000 * 2));
+                int validityPeriod = Convert.ToInt32(tokenValidityPeriod.TotalMilliseconds - 60000 * 2);
+                RenewTokenLoop(validityPeriod);
             }
             finally
             {
@@ -170,10 +174,13 @@ namespace Aproplan.Api.Http
         {
             if (_renewTimer != null)
                 _renewTimer.Dispose();
-            _renewTimer = new Timer(async (obj) =>
+            if (msDuration > 0)
             {
-                await RenewToken();
-            }, null, msDuration, Timeout.Infinite);
+                _renewTimer = new Timer(async (obj) =>
+                {
+                    await RenewToken();
+                }, null, msDuration, Timeout.Infinite);
+            }
         }
 
         /// <summary>
@@ -185,6 +192,15 @@ namespace Aproplan.Api.Http
             try
             {
                 Console.WriteLine("Renew token call...");
+                if(TokenInfo == null)
+                {
+                    throw new ApiException("You must be login before to make a renew token");
+                }
+                if (TokenInfo.ValidityLimit < DateTime.Now)
+                {
+                    throw new ApiException("Your current token is invalid, use login method instead", "TOKEN_EXPIRED");
+                }
+
                 string res = (await Request(ApiRootUrl + "renewtoken", ApiMethod.Get, null, null)).Data;
                 TokenInfo = JsonConvert.DeserializeObject<TokenInfo>(res, new JsonSerializerSettings
                 {
@@ -197,6 +213,7 @@ namespace Aproplan.Api.Http
             catch (Exception)
             {
                 TokenInfo = null;
+                throw;
             }
             finally
             {

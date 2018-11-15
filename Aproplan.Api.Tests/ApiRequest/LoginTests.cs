@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 namespace Aproplan.Api.Tests
 {    
     [TestFixture]
-    public class ApiRequestTests
+    public class LoginTests
     {
 
         [TestCase]
@@ -45,7 +45,10 @@ namespace Aproplan.Api.Tests
             Assert.AreEqual(json.UserInfo.Id, user.Id);
             Assert.AreEqual("john.smith@aproplan.com", requestData.alias);
             Assert.AreEqual("aproplan", requestData.pass);
-            
+            Assert.AreEqual(json.UserInfo.Id, request.CurrentUser.Id);
+            Assert.AreEqual(DateTime.Parse(json.ValidityStart).ToLocalTime(), request.TokenInfo.ValidityStart);
+            Assert.AreEqual(DateTime.Parse(json.ValidityLimit).ToLocalTime(), request.TokenInfo.ValidityLimit);
+
             mockWebRequest.Verify();
         }
 
@@ -104,6 +107,83 @@ namespace Aproplan.Api.Tests
             });
             Assert.AreEqual("Password", ex.ParamName);
 
+        }
+
+        [TestCase]
+        public void Logout()
+        {
+            ApiRequest request = AproplanApiUtility.CreateRequester();
+            AproplanApiUtility.FakeLogin(request);
+
+            request.Logout();
+
+            Assert.IsNull(request.CurrentUser);
+            Assert.IsNull(request.TokenInfo);
+        }
+
+        [TestCase]
+        public void RenewTokenValid()
+        {
+            ApiRequest request = AproplanApiUtility.CreateRequester();
+            DateTime currentTokenStart = DateTime.Now.AddMinutes(-6);
+            AproplanApiUtility.FakeLogin(request, currentTokenStart);
+            Guid oldToken = request.TokenInfo.Token;
+            dynamic json = new
+            {
+                Token = Guid.NewGuid(),
+                ValidityStart = DateTime.Now.ToUniversalTime().ToString("o"),
+                ValidityLimit = DateTime.Now.ToUniversalTime().AddMinutes(10).ToString("o")
+            };
+            string content = JsonConvert.SerializeObject(json);
+
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
+            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
+            
+            var tokenInfo = request.RenewToken().GetAwaiter().GetResult();
+            string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "renewtoken", request.ApiVersion, request.RequesterId, oldToken);
+            Assert.AreEqual(expectedUrl, FakeWebRequest.Instance.UriCalled[1].ToString());
+            Assert.AreEqual(json.Token, request.TokenInfo.Token);
+            Assert.AreEqual(DateTime.Parse(json.ValidityStart).ToLocalTime(), request.TokenInfo.ValidityStart);
+            Assert.AreEqual(DateTime.Parse(json.ValidityLimit).ToLocalTime(), request.TokenInfo.ValidityLimit);
+        }
+
+        [TestCase]
+        public void RenewTokenWhileInvalidPeriod()
+        {
+            ApiRequest request = AproplanApiUtility.CreateRequester();
+            DateTime currentTokenStart = DateTime.Now.AddMinutes(-11);
+            AproplanApiUtility.FakeLogin(request, currentTokenStart);
+            Guid oldToken = request.TokenInfo.Token;
+            dynamic json = new
+            {
+                Token = Guid.NewGuid(),
+                ValidityStart = DateTime.Now.ToUniversalTime().ToString("o"),
+                ValidityLimit = DateTime.Now.ToUniversalTime().AddMinutes(10).ToString("o")
+            };
+            string content = JsonConvert.SerializeObject(json);
+
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
+            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
+
+            try
+            {
+                var tokenInfo = request.RenewToken().GetAwaiter().GetResult();
+                Assert.Fail("An exception should be thrown");
+            }
+            catch (Exception ex)
+            {
+                ApiException apiException = ex as ApiException;
+                if(apiException != null)
+                {
+                    Assert.AreEqual("Your current token is invalid, use login method instead", apiException.Message);
+                    Assert.AreEqual("TOKEN_EXPIRED", apiException.Code);
+                }
+                else
+                {
+                    Assert.Fail("Wrong exception thrown");
+                }
+            }
+            
         }
     }
 }

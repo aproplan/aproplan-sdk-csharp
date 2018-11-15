@@ -1,4 +1,5 @@
 ﻿using Aproplan.Api.Http;
+using Aproplan.Api.Model.Actors;
 using Moq;
 using Newtonsoft.Json;
 using System;
@@ -29,9 +30,12 @@ namespace Aproplan.Api.Tests.Utilities
             return request;
         }
 
-        public static string BuildRestUrl(string restRoot, string resourceName, string v, Guid requesterId)
+        public static string BuildRestUrl(string restRoot, string resourceName, string v, Guid requesterId, Guid? token = null)
         {
-            return string.Format("{0}{1}?v={2}&requesterid={3}&dateformat=iso", restRoot, resourceName, v, requesterId.ToString());
+            string url = string.Format("{0}{1}?v={2}&requesterid={3}&dateformat=iso", restRoot, resourceName, v, requesterId.ToString());
+            if (token.HasValue)
+                url += "&t=" + token.ToString();
+            return url;
         }
 
         public static T GetRequestData<T>(Mock<HttpWebRequest> webRequest)
@@ -47,6 +51,28 @@ namespace Aproplan.Api.Tests.Utilities
                 }
             }
             return JsonConvert.DeserializeObject<T>(jsonData);            
+        }
+
+        public static User FakeLogin(ApiRequest request, DateTime? validityStart = null)
+        {
+            if (!validityStart.HasValue)
+                validityStart = DateTime.Now;
+            FakeWebRequest.Instance.Reset();
+            WebRequest.RegisterPrefix(request.ApiRootUrl, FakeWebRequest.Instance);
+            dynamic json = new
+            {
+                UserInfo = UserUtility.CreateUser("john.smith@aproplan.com", "John Smith"),
+                Token = Guid.NewGuid(),
+                ValidityStart = validityStart.Value.ToUniversalTime().ToString("o"),
+                ValidityLimit = validityStart.Value.ToUniversalTime().AddMinutes(10).ToString("o")
+            };
+            string content = JsonConvert.SerializeObject(json);
+
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
+            mockWebRequest.SetupSet(r => r.Method = "POST").Verifiable();
+            mockWebRequest.SetupSet(r => r.ContentType = "application/json").Verifiable();
+
+            return request.Login("john.smith@aproplan.com", "aproplan").GetAwaiter().GetResult();
         }
 
     }
