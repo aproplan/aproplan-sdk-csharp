@@ -8,3 +8,6 @@
 /packages
 /TestSdkConsole/bin
 /TestSdkConsole/obj
+/Aproplan.Api.Tests/bin
+/Aproplan.Api.Tests/obj
+/TestResults

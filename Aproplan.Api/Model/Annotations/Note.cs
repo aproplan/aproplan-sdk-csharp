@@ -26,5 +26,13 @@ namespace Aproplan.Api.Model.Annotations
         }
 
         public Guid? OriginalNoteId { get; set; }
+
+        public NoteProblemLocation ProblemLocation { get; set; }
+    }
+
+    public enum NoteProblemLocation
+    {
+        Undefined = 0,
+        Floor = 1, Wall = 2, Ceiling= 3
     }
 }

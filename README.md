@@ -42,6 +42,28 @@ To make CRUD operations on the entities, you need to use the following methods o
 	* DeleteEntities
 	* DeleteEntity
 
+### Sync methods
+
+When you need to update your data often in an offline way, you can use sync method that will returns you the data from a specific timestamp. 
+That returned contains nested data then, you need only to call some kind of method:
+
+* **SyncNotes** To get all notes (points) and nested data like NoteComment, NoteDocument...
+* **SyncForms** To get all forms and nested data like FormItem, FormSection...
+* **SyncFormTemplates** To get all form templates and nested data like FormQuestion, FormSectionRule,...
+* **SyncIssueTypes** To get all the IssueTypes (sub category) with theirs subjects
+* **SyncChapters** To get all the chapters (Category)
+* **SyncSubCells** To get all subcells (room level 2)
+* **SyncParentCells** To get all parent cell (room level 1)
+* **SyncFolders** To get all folders and its hierarchy
+* **SyncProjects** To get all projects
+* **SyncContactDetails** To get all contact details
+* **SyncProjectStatus** To get all status configured by project
+* **SyncUsers** To get all users that the user can see
+* **SyncMeetings** To get all meetings (lists)
+* **SyncAttachmentDocuments** To get all document that user can see through forms or points because they are attached to them
+* **SyncFolderDocuments** To get all documents that user can see through the visibility of folders
+
+
 ### Upload documents
 
 To upload document, there is a specific service that you can instantiate to make this kind of operaion

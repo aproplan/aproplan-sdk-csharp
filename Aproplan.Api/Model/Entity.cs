@@ -6,9 +6,13 @@ namespace Aproplan.Api.Model
 {
     public abstract partial class Entity
     {
-        public Guid Id;
-        public int EntityVersion;
-        public string[] ModifiedProperties;
+        public Guid Id { get; set; }
+        public int EntityVersion { get; set; }
+        public string[] ModifiedProperties { get; set; }
+        public Boolean Deleted { get; set; }
+        public DateTime EntityCreationDate { get; set; }
+        public DateTime EntityModificationDate { get; set; }
+        public Guid EntityCreationUser { get; set; }
 
         public Entity()
         {
