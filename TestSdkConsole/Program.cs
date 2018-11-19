@@ -23,7 +23,8 @@ namespace TestSdkConsole
         private static ApiRequest Api;
         static void Main(String[] args)
         {
-            Api = new ApiRequest(new Guid("EFCF4D2E-70BD-4BCE-B81B-CBED37F6F7F3"), "https://api-tst.aproplan.com/");
+            // You need to put your token to use the APROPLAN api, you can request one here: https://www.aproplan.com/integrations
+            Api = new ApiRequest(new Guid("YOUR-API-REQUESTER-ID"), "https://api-tst.aproplan.com/");
 
             Task t = mainLoop();
             t.Wait(); 
