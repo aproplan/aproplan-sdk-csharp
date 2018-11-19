@@ -13,7 +13,7 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <AssemblyVersion>1.15.0.0</AssemblyVersion>
     <FileVersion>1.15.0.0</FileVersion>
-    <PackageIconUrl>https://raw.githubusercontent.com/aproplan/aproplan-api-dotnet/master/assets/aproplan.png</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/aproplan/aproplan-sdk-csharp/master/assets/aproplan.png</PackageIconUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
