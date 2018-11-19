@@ -6,6 +6,11 @@
     <Company>Aproplan</Company>
     <Product>Aproplan API SDK</Product>
     <Authors>Sergio Ristagno</Authors>
+    <PackageTags>APROPLAN</PackageTags>
+    <Description>The official APROPLAN client API for .NET</Description>
+    <PackageId />
+    <PackageProjectUrl>http://www.aproplan.com</PackageProjectUrl>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
