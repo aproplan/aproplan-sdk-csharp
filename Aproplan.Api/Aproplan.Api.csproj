@@ -2,15 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.13.0</Version>
-    <Company>Aproplan</Company>
+    <Version>1.15.0</Version>
+    <Company>APROPLAN</Company>
     <Product>Aproplan API SDK</Product>
-    <Authors>Sergio Ristagno</Authors>
-    <PackageTags>APROPLAN</PackageTags>
+    <Authors>APROPLAN</Authors>
+    <PackageTags></PackageTags>
     <Description>The official APROPLAN client API for .NET</Description>
     <PackageId />
     <PackageProjectUrl>http://www.aproplan.com</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <AssemblyVersion>1.15.0.0</AssemblyVersion>
+    <FileVersion>1.15.0.0</FileVersion>
+    <PackageIconUrl>https://raw.githubusercontent.com/aproplan/aproplan-api-dotnet/master/assets/aproplan.png</PackageIconUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
