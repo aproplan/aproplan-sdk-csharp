@@ -9,7 +9,7 @@
     <PackageTags></PackageTags>
     <Description>The official APROPLAN client API for .NET</Description>
     <PackageId />
-    <PackageProjectUrl>http://www.aproplan.com</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/aproplan/aproplan-sdk-csharp</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <AssemblyVersion>1.15.0.0</AssemblyVersion>
     <FileVersion>1.15.0.0</FileVersion>
