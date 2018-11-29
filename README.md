@@ -2,6 +2,19 @@
 
 You can use this C# project to interact with the APROPLAN API in order to create, modify or delete entities into the platform in a programmatic way.
 
+- [Installation](#installation)
+- [Usage](#usage)
+- [Api documentation](#documentation)
+
+# Installation
+
+## Add a dependency
+
+You need to add a dependency in your solution, you can make in several ways:
+
+* Run the nuget command for installing the client as `Install-Package Aproplan.Api`
+* Use the NuGet manager and search for Aproplan to install `Aproplan.Api`
+
 # Usage
 
 ### Initialization
