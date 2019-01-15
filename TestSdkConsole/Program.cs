@@ -15,6 +15,7 @@ using Aproplan.Api.Model.IdentificationFiles;
 using Aproplan.Api.Model.List;
 using Aproplan.Api.Model.Projects;
 using Aproplan.Api.Model.Projects.Config;
+using Microsoft.Extensions.Logging;
 
 namespace TestSdkConsole
 {
@@ -24,7 +25,14 @@ namespace TestSdkConsole
         static void Main(String[] args)
         {
             // You need to put your token to use the APROPLAN api, you can request one here: https://www.aproplan.com/integrations
-            Api = new ApiRequest(new Guid("YOUR-API-REQUESTER-ID"), "https://api-tst.aproplan.com/");
+            LoggerFactory loggerFactory = new LoggerFactory();
+            
+            loggerFactory.AddConsole(LogLevel.Debug);
+            
+            ILogger logger = loggerFactory.CreateLogger(typeof(ApiRequest));
+            
+            logger.LogDebug("test");
+            Api = new ApiRequest(null, null, new Guid("EFCF4D2E-70BD-4BCE-B81B-CBED37F6F7F3"), "20", "https://api-tst.aproplan.com/", logger);
 
             Task t = mainLoop();
             t.Wait(); 

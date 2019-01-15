@@ -7,7 +7,7 @@ using Aproplan.Api.Model.Documents;
 using Aproplan.Api.Model.List;
 using Aproplan.Api.Model.Projects;
 using Aproplan.Api.Model.Projects.Config;
-using Common.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -612,9 +612,18 @@ namespace Aproplan.Api.Http
         {
             if(_logger != null)
             {
-                _logger.Debug($"API Call {method} to {uri}");
-                _logger.Debug(data);
-                _logger.Debug(""); 
+                string debugMsg = $"API call {method} to {uri} \r\n\r\n";
+                if(queryParams != null && queryParams.Count > 0)
+                {
+                    debugMsg += "\r\nqueryParams: \r\n";
+                    foreach(var prm in queryParams)
+                    {
+                        debugMsg += "- " + prm.Key + " = " + (prm.Value == null ? "<null>" : prm.Value) + "\r\n";
+                    }
+                }
+                debugMsg += "\r\n data: " + data == null ? "<null>" : (isFile ? "file content" : data);
+                _logger.LogDebug(debugMsg);
+                
             }
 
             int nb = 0;
@@ -680,9 +689,9 @@ namespace Aproplan.Api.Http
 
                         if (_logger != null)
                         {
-                            _logger.Debug($"API Answer");
-                            _logger.Debug(dataString);
-                            _logger.Debug("");
+                            string debugMsg = $"API response of {method} to {uri}\r\n\r\n";
+                            debugMsg += "\r\n data: " + dataString == null ? "<null>" : dataString;
+                            _logger.LogDebug(debugMsg);
                         }
 
                         return new HttpResponse
@@ -773,13 +782,7 @@ namespace Aproplan.Api.Http
 
         #region Constructors
 
-        public ApiRequest(
-            string login, 
-            string password, 
-            Guid requesterId, 
-            string apiVersion = "13", 
-            string rootUrl = "https://app.aproplan.com", 
-            ILog logger=null)
+        public ApiRequest(string login, string password, Guid requesterId, string apiVersion = "20", string rootUrl = "https://app.aproplan.com", ILogger logger = null)
         {
             // Force TLS 1.2
             System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -846,8 +849,8 @@ namespace Aproplan.Api.Http
         readonly List<Tuple<ApiMethod, string>> _resourcesWithoutConnection;
         readonly List<string> _resourcesLogin;
         readonly string _resourceRenew;
-        private ILog _logger;
-        public static string DefaultApiVersion = "20";
+        private ILogger _logger;
+        public const string DefaultApiVersion = "20";
         private static string DefaultApiRootUrl = "https://api.aproplan.com/";
 
         #endregion
