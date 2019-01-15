@@ -7,6 +7,7 @@ using Aproplan.Api.Model.Documents;
 using Aproplan.Api.Model.List;
 using Aproplan.Api.Model.Projects;
 using Aproplan.Api.Model.Projects.Config;
+using Common.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -609,6 +610,13 @@ namespace Aproplan.Api.Http
         /// <returns>The response of the request as a string</returns>
         public async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, bool isFile = false)
         {
+            if(_logger != null)
+            {
+                _logger.Debug($"API Call {method} to {uri}");
+                _logger.Debug(data);
+                _logger.Debug(""); 
+            }
+
             int nb = 0;
             if (uri != _resourceRenew)
             {
@@ -669,6 +677,14 @@ namespace Aproplan.Api.Http
                     {
                         StreamReader streamReader = new StreamReader(stream);
                         string dataString = streamReader.ReadToEnd();
+
+                        if (_logger != null)
+                        {
+                            _logger.Debug($"API Answer");
+                            _logger.Debug(dataString);
+                            _logger.Debug("");
+                        }
+
                         return new HttpResponse
                         {
                             Data = dataString,
@@ -757,7 +773,13 @@ namespace Aproplan.Api.Http
 
         #region Constructors
 
-        public ApiRequest(string login, string password, Guid requesterId, string apiVersion = "13", string rootUrl = "https://app.aproplan.com")
+        public ApiRequest(
+            string login, 
+            string password, 
+            Guid requesterId, 
+            string apiVersion = "13", 
+            string rootUrl = "https://app.aproplan.com", 
+            ILog logger=null)
         {
             // Force TLS 1.2
             System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -789,6 +811,7 @@ namespace Aproplan.Api.Http
                 new Tuple<ApiMethod, String>(ApiMethod.Post, ApiRootUrl + "simpleloginsecure"),
                 new Tuple<ApiMethod, String>(ApiMethod.Post, ApiRootUrl + "users")
             };
+
             _resourcesLogin = new List<string>
             {
                 ApiRootUrl + "loginwithfullinfosecure",
@@ -796,8 +819,9 @@ namespace Aproplan.Api.Http
                 ApiRootUrl + "simpleloginsecure"
             };
 
-
             _resourceRenew = ApiRootUrl + "renewtoken";
+
+            _logger = logger; 
         }
 
         public ApiRequest(string login, string password, Guid requesterId, string rootUrl = null) : this(login, password, requesterId, DefaultApiVersion, rootUrl)
@@ -822,7 +846,7 @@ namespace Aproplan.Api.Http
         readonly List<Tuple<ApiMethod, string>> _resourcesWithoutConnection;
         readonly List<string> _resourcesLogin;
         readonly string _resourceRenew;
-
+        private ILog _logger;
         public static string DefaultApiVersion = "20";
         private static string DefaultApiRootUrl = "https://api.aproplan.com/";
 
