@@ -16,7 +16,18 @@ namespace Aproplan.Api.Tests.Utilities
     {
         public static readonly Guid REQUESTER_ID = Guid.NewGuid();
         public static readonly string ROOT_URL = "https://api.aproplan.com/";
-        public static readonly string API_VERSION = "13";
+        public static readonly string API_VERSION = "20";
+
+        public static Mock<ApiRequest> CreateMockRequester(bool connected = true)
+        {
+            Mock<ApiRequest> mockApi = new Mock<ApiRequest>(AproplanApiUtility.REQUESTER_ID, AproplanApiUtility.ROOT_URL);
+            if (connected)
+            {
+                mockApi.SetupGet((a) => a.RequestLoginState).Returns(RequestLoginState.Connected);
+                mockApi.Setup((a) => a.IsTokenValid()).Returns(true);
+            }
+            return mockApi;
+        }
 
         public static ApiRequest CreateRequester(Guid? requesterId = null, string version = null, string rootUrl = null)
         {

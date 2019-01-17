@@ -87,7 +87,7 @@ namespace Aproplan.Api.Tests
             return request;
         }
 
-        public static Mock<HttpWebRequest> CreateRequestWithResponse(string responseContent)
+        public static Mock<HttpWebRequest> CreateRequestWithResponse(string responseContent, Dictionary<string, string> headersDic = null)
         {
             var response = new Mock<HttpWebResponse>(MockBehavior.Loose);
             var responseStream = new MemoryStream(Encoding.UTF8.GetBytes(responseContent));
@@ -97,6 +97,17 @@ namespace Aproplan.Api.Tests
 
             var request = new Mock<HttpWebRequest>();
             request.Setup(s => s.GetResponseAsync()).Returns(Task.FromResult((WebResponse)response.Object));
+
+            var headers = new WebHeaderCollection();
+            if(headersDic != null)
+            {
+                foreach(var hkeyVal in headersDic)
+                {
+                    headers.Add(hkeyVal.Key, hkeyVal.Value);
+                }
+            }
+            
+            response.SetupGet(s => s.Headers).Returns(headers);
 
             var requestStream= new MemoryStream();
             request.Setup(s => s.GetRequestStream()).Returns(requestStream);

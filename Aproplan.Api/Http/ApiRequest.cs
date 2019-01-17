@@ -75,7 +75,7 @@ namespace Aproplan.Api.Http
 
         public string ApiRootUrl { get; }
 
-        public RequestLoginState RequestLoginState
+        public virtual RequestLoginState RequestLoginState
         {
             get
             {
@@ -445,63 +445,9 @@ namespace Aproplan.Api.Http
             return await DeleteEntities<T>(new[] { id }, projectId);
         }
 
-        public async Task<SyncResult<CompanyUser>> SyncCompanyUsers(String continuationToken) { return await this.SyncEntity<CompanyUser>(continuationToken); }
-        public async Task<SyncResult<User>> SyncUsers(string continuationToken) { return await SyncEntity<User>(continuationToken); }
-        public async Task<SyncResult<AccessRightBase>> SyncAccessRight(string continuationToken) { return await SyncEntity<AccessRightBase>(continuationToken); }
-        public async Task<SyncResult<FormTemplate>> SyncFormTemplate(string continuationToken) { return await SyncEntity<FormTemplate>(continuationToken); }
-        public async Task<SyncResult<Project>> SyncProjects(String continuationToken) { return await this.SyncEntity<Project>(continuationToken); }
-
-        public async Task<SyncResult<Note>> SyncNotes(Guid projectId, String continuationToken) { return await this.SyncEntity<Note>(continuationToken, projectId); }
-        public async Task<SyncResult<NoteBase>> SyncNoteBaseVisibilityLostSync(Guid projectId, String continuationToken) { return await SyncEntity<NoteBase>(continuationToken, projectId, null, "notebasevisibilitylostsync"); }
-        public async Task<SyncResult<Form>> SyncForms(Guid projectId, String continuationToken) { return await this.SyncEntity<Form>(continuationToken, projectId); }
-        public async Task<SyncResult<FormTemplate>> SyncFormTemplates(Guid projectId, String continuationToken) { return await this.SyncEntity<FormTemplate>(continuationToken, projectId); }
-        public async Task<SyncResult<IssueType>> SyncIssueTypes(Guid projectId, String continuationToken) { return await this.SyncEntity<IssueType>(continuationToken, projectId); }
-        public async Task<SyncResult<Chapter>> SyncChapters(Guid projectId, String continuationToken) { return await this.SyncEntity<Chapter>(continuationToken, projectId); }
-        public async Task<SyncResult<SubCell>> SyncSubCells(Guid projectId, String continuationToken) { return await this.SyncEntity<SubCell>(continuationToken, projectId); }
-        public async Task<SyncResult<ParentCell>> SyncParentCells(Guid projectId, String continuationToken) { return await this.SyncEntity<ParentCell>(continuationToken, projectId); }
-        public async Task<SyncResult<Folder>> SyncFolders(Guid projectId, String continuationToken) { return await this.SyncEntity<Folder>(continuationToken, projectId); }
         
-        public async Task<SyncResult<ContactDetails>> SyncContactDetails(Guid projectId, String continuationToken) { return await this.SyncEntity<ContactDetails>(continuationToken, projectId); }
-        public async Task<SyncResult<NoteProjectStatus>> SyncProjectStatus(Guid projectId, String continuationToken) { return await this.SyncEntity<NoteProjectStatus>(continuationToken, projectId); }
-        public async Task<SyncResult<User>> SyncUsers(Guid projectId, String continuationToken) { return await this.SyncEntity<User>(continuationToken, projectId); }
-        public async Task<SyncResult<Meeting>> SyncMeetings(Guid projectId, String continuationToken) { return await this.SyncEntity<Meeting>(continuationToken, projectId); }
-        public async Task<SyncResult<Document>> SyncAttachmentDocuments(Guid projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, null, "attachmentdocumentsync"); }
-        public async Task<SyncResult<Document>> SyncFolderDocuments(Guid projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, null, "folderdocumentsync"); }
 
-        /// <summary>
-        /// To get all the changes of an entity since a specified point in time
-        /// </summary>
-        /// <typeparam name="T">Kind of entity to get</typeparam>
-        /// <param name="syncStamp">This is the stamp from when the sync need to get differences. If not specified, it means to get data from the beginning. 
-        /// Else it corresponds to the last sync done. Value returned in the SyncTimestamp property of the response headers</param>
-        /// <param name="forcedResourceName">IF the end point to use is not really the name of the entity, you can specify the name of the resource endpoint to use</param>
-        /// <returns>A SyncResult containing the data from the syncStamp you specified and until a new SyncStamp specified in ContinuationToken</returns>
-        protected async Task<SyncResult<T>> SyncEntity<T>(String syncStamp, Guid? projectId = null, int? requestedBlockSize = null, String forcedResourceName = null) where T : Entity
-        {
-            string resourceName = forcedResourceName;
-            if (resourceName == null)
-            {
-                resourceName = GetEntityResourceName<T>(GetEntityResourceType.Sync);
-            }
-            IDictionary<String, String> additionalParams = new Dictionary<String, String>();
-            additionalParams["timestamp"] = syncStamp;
-            if(requestedBlockSize.HasValue)
-            {
-                if (requestedBlockSize.Value <= 0) throw new ApiException("requestedBlockSize cannot be zero or negative");
-                additionalParams["requestedBlockSize"] = requestedBlockSize.Value.ToString();
-
-            }
-            HttpResponse res = await GetRaw(resourceName, null, null, projectId, additionalParams);
-            var entityList = JsonConvert.DeserializeObject<List<T>>(res.Data, new JsonSerializerSettings
-            {
-                DateTimeZoneHandling = DateTimeZoneHandling.Local
-            });
-            return new SyncResult<T>
-            {
-                Data = entityList,
-                ContinuationToken = res.Headers["SyncTimestamp"]
-            };
-        }
+        
 
         private async Task<T[]> CreateOrUpdateEntities<T>(T[] entities, bool isCreation, Guid? projectId = null, IDictionary<string, string> queryParams = null) where T : Entity
         {
@@ -560,7 +506,7 @@ namespace Aproplan.Api.Http
         }       
 
 
-        private string GetEntityResourceName<T>(GetEntityResourceType type) where T : Entity
+        internal string GetEntityResourceName<T>(GetEntityResourceType type) where T : Entity
         {
             string resourceName = typeof(T).Name.ToLowerInvariant();
             int len = resourceName.Length;
@@ -591,7 +537,7 @@ namespace Aproplan.Api.Http
             return resourceName;
         }
 
-        private bool IsTokenValid()
+        public virtual bool IsTokenValid()
         {
             bool retVal = TokenInfo != null && DateTime.Now < TokenInfo.ValidityLimit;
             return retVal;

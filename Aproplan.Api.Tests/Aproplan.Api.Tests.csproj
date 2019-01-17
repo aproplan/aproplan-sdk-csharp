@@ -80,6 +80,7 @@
     <Compile Include="ApiRequest\GetEntitiesTests.cs" />
     <Compile Include="FakeWebRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\SyncServiceTests.cs" />
     <Compile Include="Utilities\AproplanApiUtility.cs" />
     <Compile Include="Utilities\Models\UserUtility.cs" />
   </ItemGroup>
