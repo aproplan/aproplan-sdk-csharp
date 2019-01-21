@@ -3,6 +3,7 @@ using Aproplan.Api.Http.Services;
 using Aproplan.Api.Model.Annotations;
 using Aproplan.Api.Model.Projects;
 using Aproplan.Api.Tests.Utilities;
+using Aproplan.Api.Tests.Utilities.Models;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -18,21 +19,20 @@ namespace Aproplan.Api.Tests.Services
     [TestFixture]
     public class SyncServiceTests
     {
-        [SetUp]
+        private Mock<ApiRequest> mockApi;
+        SyncService syncService;
+         [SetUp]
         public void SetupCase() {
             FakeWebRequest.Instance.Reset();
+            mockApi = AproplanApiUtility.CreateMockRequester();
+            WebRequest.RegisterPrefix(AproplanApiUtility.ROOT_URL, FakeWebRequest.Instance);
+            syncService = new SyncService(mockApi.Object);
+            
         }
         [TestCase]
         public void SyncProjectsOK()
         {
-            Mock<ApiRequest> mockApi = AproplanApiUtility.CreateMockRequester();
-
-
-            WebRequest.RegisterPrefix(AproplanApiUtility.ROOT_URL, FakeWebRequest.Instance);
-
-            SyncService syncService = new SyncService(mockApi.Object);
-
-            List<Project> fakeProjects = GetFakeProjects();
+            List<Project> fakeProjects = ProjectUtility.GetFakeSimpleProjects();
 
             string content = JsonConvert.SerializeObject(fakeProjects.GetRange(0, 2), new JsonSerializerSettings
             {
@@ -58,13 +58,7 @@ namespace Aproplan.Api.Tests.Services
         [TestCase]
         public void SyncAllProjectsOK()
         {
-
-            Mock<ApiRequest> mockApi = AproplanApiUtility.CreateMockRequester();
-
-            WebRequest.RegisterPrefix(AproplanApiUtility.ROOT_URL, FakeWebRequest.Instance);
-            SyncService syncService = new SyncService(mockApi.Object);
-
-            List<Project> fakeProjects = GetFakeProjects();
+            List<Project> fakeProjects = ProjectUtility.GetFakeSimpleProjects();
             int index = 0;
             List<Project> resultToReturn = fakeProjects.GetRange(index, 2);
             string content = JsonConvert.SerializeObject(resultToReturn, new JsonSerializerSettings
@@ -123,14 +117,8 @@ namespace Aproplan.Api.Tests.Services
         [TestCase]
         public void SyncNotesOK()
         {
-            Mock<ApiRequest> mockApi = AproplanApiUtility.CreateMockRequester();
             Guid projectId = Guid.NewGuid();
-
-            WebRequest.RegisterPrefix(AproplanApiUtility.ROOT_URL, FakeWebRequest.Instance);
-
-            SyncService syncService = new SyncService(mockApi.Object);
-
-            List<Note> fakeNotes = GetFakeNotes();
+            List<Note> fakeNotes = NoteUtility.GetFakeSimpleNotes();
 
             string content = JsonConvert.SerializeObject(fakeNotes.GetRange(0, 2), new JsonSerializerSettings
             {
@@ -157,14 +145,9 @@ namespace Aproplan.Api.Tests.Services
         [TestCase]
         public void SyncAllNotesOK()
         {
-
             Guid projectId = Guid.NewGuid();
-            Mock<ApiRequest> mockApi = AproplanApiUtility.CreateMockRequester();
 
-            WebRequest.RegisterPrefix(AproplanApiUtility.ROOT_URL, FakeWebRequest.Instance);
-            SyncService syncService = new SyncService(mockApi.Object);
-
-            List<Note> fakeNotes = GetFakeNotes();
+            List<Note> fakeNotes = NoteUtility.GetFakeSimpleNotes();
             int index = 0;
             List<Note> resultToReturn = fakeNotes.GetRange(index, 2);
             string content = JsonConvert.SerializeObject(resultToReturn, new JsonSerializerSettings
@@ -226,12 +209,7 @@ namespace Aproplan.Api.Tests.Services
         {
 
             Guid projectId = Guid.NewGuid();
-            Mock<ApiRequest> mockApi = AproplanApiUtility.CreateMockRequester();
-
-            WebRequest.RegisterPrefix(AproplanApiUtility.ROOT_URL, FakeWebRequest.Instance);
-            SyncService syncService = new SyncService(mockApi.Object);
-
-            List<Note> fakeNotes = GetFakeNotes();
+            List<Note> fakeNotes = NoteUtility.GetFakeSimpleNotes();
             int index = 0;
             List<Note> resultToReturn = fakeNotes.GetRange(index, 2);
             string content = JsonConvert.SerializeObject(resultToReturn, new JsonSerializerSettings
@@ -287,32 +265,6 @@ namespace Aproplan.Api.Tests.Services
             Assert.AreEqual(lastStamp, result.ContinuationToken);
 
             mockWebRequest.Verify();
-        }
-
-        public List<Project> GetFakeProjects()
-        {
-            List<Project> fakeProjects = new List<Project>
-            {
-                new Project{ Id = Guid.NewGuid(), Code = "PR1", Name = "Project 1" },
-                new Project{ Id = Guid.NewGuid(), Code = "PR2", Name = "Project 2" },
-                new Project{ Id = Guid.NewGuid(), Code = "PR3", Name = "Project 3" },
-                new Project{ Id = Guid.NewGuid(), Code = "PR4", Name = "Project 4" },
-                new Project{ Id = Guid.NewGuid(), Code = "PR5", Name = "Project 5" }
-            };
-            return fakeProjects;
-        }
-
-        public List<Note> GetFakeNotes()
-        {
-            List<Note> fakePoints= new List<Note>
-            {
-                new Note{ Id = Guid.NewGuid(), Code = "PR1", Subject = "Point 1" },
-                new Note{ Id = Guid.NewGuid(), Code = "PR2", Subject = "Point 2" },
-                new Note{ Id = Guid.NewGuid(), Code = "PR3", Subject = "Point 3" },
-                new Note{ Id = Guid.NewGuid(), Code = "PR4", Subject = "Point 4" },
-                new Note{ Id = Guid.NewGuid(), Code = "PR5", Subject = "Point 5" }
-            };
-            return fakePoints;
         }
     }
 }

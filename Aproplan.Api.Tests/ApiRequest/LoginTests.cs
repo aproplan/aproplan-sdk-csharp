@@ -14,14 +14,18 @@ namespace Aproplan.Api.Tests
     [TestFixture]
     public class LoginTests
     {
+        private ApiRequest request;
+
+        [SetUp]
+        public void SetupCase()
+        {
+            request = AproplanApiUtility.CreateRequester();
+            FakeWebRequest.Instance.Reset();
+        }
 
         [TestCase]
         public void LoginWithGoodCredentialsReturnsUser()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
-
-            FakeWebRequest.Instance.Reset();
-            WebRequest.RegisterPrefix(request.ApiRootUrl, FakeWebRequest.Instance);
             dynamic json = new
             {
                 UserInfo = UserUtility.CreateUser("john.smith@aproplan.com", "John Smith"),
@@ -55,9 +59,6 @@ namespace Aproplan.Api.Tests
         [TestCase]        
         public void LoginWithBadCredentialsReturnsUser()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
-
-            FakeWebRequest.Instance.Reset();
             WebRequest.RegisterPrefix(request.ApiRootUrl, FakeWebRequest.Instance);
 
             Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse("");
@@ -87,7 +88,6 @@ namespace Aproplan.Api.Tests
         [TestCase]
         public void LoginWithNoCredentials()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
             ArgumentNullException ex = Assert.Throws<ArgumentNullException>(() =>
             {
                 request.Login().GetAwaiter().GetResult();
@@ -99,8 +99,6 @@ namespace Aproplan.Api.Tests
         [TestCase]
         public void LoginWithNoPasswordCredentials()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
-            
             ArgumentNullException ex = Assert.Throws<ArgumentNullException>(() =>
             {
                 request.Login("john.smith@aproplan.com", null).GetAwaiter().GetResult();
@@ -112,7 +110,6 @@ namespace Aproplan.Api.Tests
         [TestCase]
         public void Logout()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
             AproplanApiUtility.FakeLogin(request);
 
             request.Logout();
@@ -124,7 +121,6 @@ namespace Aproplan.Api.Tests
         [TestCase]
         public void RenewTokenValid()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
             DateTime currentTokenStart = DateTime.Now.AddMinutes(-6);
             AproplanApiUtility.FakeLogin(request, currentTokenStart);
             Guid oldToken = request.TokenInfo.Token;
@@ -150,7 +146,6 @@ namespace Aproplan.Api.Tests
         [TestCase]
         public void RenewTokenWhileInvalidPeriod()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
             DateTime currentTokenStart = DateTime.Now.AddMinutes(-11);
             AproplanApiUtility.FakeLogin(request, currentTokenStart);
             Guid oldToken = request.TokenInfo.Token;

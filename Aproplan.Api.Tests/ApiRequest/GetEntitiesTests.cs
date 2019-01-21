@@ -1,87 +1,198 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using Aproplan.Api.Http;
+﻿using Aproplan.Api.Http;
 using Aproplan.Api.Http.Utils;
-using Aproplan.Api.Model.IdentificationFiles;
-using Aproplan.Api.Model.List;
+using Aproplan.Api.Model.Annotations;
 using Aproplan.Api.Tests.Utilities;
+using Aproplan.Api.Tests.Utilities.Models;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
 
 namespace Aproplan.Api.Tests
 {
-    [TestFixture]
     public class GetEntitiesTests
     {
-        [TestCase]
-        public void GetEntitiesWithoutLoginOK()
+        ApiRequest request;
+        [SetUp]
+        public void SetupCase()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
+            request = AproplanApiUtility.CreateRequester();
 
             WebRequest.RegisterPrefix(request.ApiRootUrl, FakeWebRequest.Instance);
+            UserUtility.MakeLogin(request);
+        }
 
-            List<Country> fakeCountries = new List<Country>
-            {
-                new Country { Iso = "BEL", Iso2 = "BE", Name = "Belgium" },
-                new Country { Iso = "ITA", Iso2 = "IT", Name = "Italy" }
-            };
+        [TestCase]
+        public void GetEntityByIdOK()
+        {
+            var projectId = Guid.NewGuid();
+            Note note = NoteUtility.GetFakeSimpleNotes()[0];
 
-            string content = JsonConvert.SerializeObject(fakeCountries, new JsonSerializerSettings
+            string content = JsonConvert.SerializeObject(new List<Note> { note }, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Utc
             });
 
             Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
-            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();            
+            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
 
-            List<Country> countries = request.GetEntityList<Country>().GetAwaiter().GetResult();
+            Note resultNote = request.GetEntityById<Note>(note.Id, projectId).GetAwaiter().GetResult();
 
+            string filter = string.Format("Filter.Eq(Id,{0})", note.Id);
 
-            UriBuilder uriBuilder = new UriBuilder("https://api.aproplan.com/rest/countries");
-            string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "countries", request.ApiVersion, request.RequesterId);
+            
+            string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "notes", request.ApiVersion, request.RequesterId, request.TokenInfo.Token);
+            expectedUrl += "&filter=" + AproplanApiUtility.EncodeUrl(filter) + "&projectid=" + projectId;
+            
             Assert.AreEqual(expectedUrl, FakeWebRequest.Instance.UriCalled[0].ToString());
-            Assert.AreEqual(2, countries.Count);
-            Assert.AreEqual(fakeCountries[0].Id, countries[0].Id);
-            Assert.AreEqual(fakeCountries[1].Id, countries[1].Id);
+
+            Assert.AreEqual(note.Id, resultNote.Id);
+
             mockWebRequest.Verify();
         }
 
         [TestCase]
-        public void GetEntitiesWithoutLoginNOK()
+        public void GetEntityByIdWithoutResultOK()
         {
-            ApiRequest request = AproplanApiUtility.CreateRequester();
-
-            WebRequest.RegisterPrefix(request.ApiRootUrl, FakeWebRequest.Instance);
-            string content = "";
+            string content = JsonConvert.SerializeObject(new List<Note>(), new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            });
 
             Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
             mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
 
-            try
-            {
-                request.GetEntityList<Meeting>().GetAwaiter().GetResult();
-                Assert.Fail("An exception should occur");
-            }
-            catch(Exception ex)
-            {
-                ApiException apiException = ex as ApiException;
-                if(apiException != null)
-                {
-                    Assert.AreEqual("Cannot call API without to be connected", apiException.Message);
-                    Assert.AreEqual("NOT_CONNECTED", apiException.Code);
-                }
-                else
-                {
-                    Assert.Fail("Wrong exception thrown", ex);
-                }
-                
-            }
+            var id = Guid.NewGuid();
+            Note resultNote = request.GetEntityById<Note>(id).GetAwaiter().GetResult();
 
-            
+            Assert.IsNull(resultNote);
+            mockWebRequest.Verify();
         }
+
+        [TestCase]
+        public void GetEntityByIdsWithSeveralValOK()
+        {
+            var projectId = Guid.NewGuid();
+            List<Note> notes = NoteUtility.GetFakeSimpleNotes();
+
+            string content = JsonConvert.SerializeObject(notes, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            });
+
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
+            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
+
+            Guid[] ids = notes.Select((n => n.Id)).ToArray();
+            List<Note> resultNotes = request.GetEntityByIds<Note>(ids, projectId).GetAwaiter().GetResult();
+
+            string filter = Filter.In("Id", ids).ToString();
+
+
+            string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "notes", request.ApiVersion, request.RequesterId, request.TokenInfo.Token);
+            expectedUrl += "&filter=" + AproplanApiUtility.EncodeUrl(filter) + "&projectid=" + projectId;
+
+            Assert.AreEqual(expectedUrl, FakeWebRequest.Instance.UriCalled[0].ToString());
+
+            Assert.AreEqual(notes.Count, resultNotes.Count);
+            for (int i = 0; i < notes.Count; i++) {
+                var expectedNote = notes[i];
+                Assert.AreEqual(expectedNote.Id, resultNotes[i].Id);
+            }
+
+            mockWebRequest.Verify();
+        }
+
+        [TestCase]
+        public void GetEntityByIdsWithOneValOK()
+        {
+            var projectId = Guid.NewGuid();
+            Note note = NoteUtility.GetFakeSimpleNotes()[0];
+
+            string content = JsonConvert.SerializeObject(new List<Note> { note }, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            });
+
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
+            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
+
+            Guid[] ids = new Guid[] { note.Id };
+            List<Note> resultNotes = request.GetEntityByIds<Note>(ids, projectId).GetAwaiter().GetResult();
+
+            string filter = Filter.Eq("Id", note.Id).ToString();
+
+
+            string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "notes", request.ApiVersion, request.RequesterId, request.TokenInfo.Token);
+            expectedUrl += "&filter=" + AproplanApiUtility.EncodeUrl(filter) + "&projectid=" + projectId;
+
+            Assert.AreEqual(expectedUrl, FakeWebRequest.Instance.UriCalled[0].ToString());
+
+            Assert.AreEqual(1, resultNotes.Count);
+            Assert.AreEqual(note.Id, resultNotes[0].Id);
+            
+
+            mockWebRequest.Verify();
+        }
+
+        [TestCase]
+        public void GetEntityCountOK()
+        {
+            var projectId = Guid.NewGuid();
+            string content = JsonConvert.SerializeObject(new List<Note>(), new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            });
+
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse("125");
+            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
+
+            var id = Guid.NewGuid();
+            Filter filter = Filter.IsNotNull("Subject");
+
+            int cpt = request.GetEntityCount<Note>(projectId, filter).GetAwaiter().GetResult();
+
+            string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "notecount", request.ApiVersion, request.RequesterId, request.TokenInfo.Token);
+            expectedUrl += "&filter=" + AproplanApiUtility.EncodeUrl(filter.ToString()) + "&projectid=" + projectId;
+
+            Assert.AreEqual(expectedUrl, FakeWebRequest.Instance.UriCalled[0].ToString());
+            Assert.AreEqual(125, cpt);
+            mockWebRequest.Verify();
+        }
+
+        [TestCase]
+        public void GetEntityIdsOK()
+        {
+            var projectId = Guid.NewGuid();
+            List<Guid> expectedGuid = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+
+            string content = JsonConvert.SerializeObject(expectedGuid, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            });
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
+            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
+
+            var id = Guid.NewGuid();
+            Filter filter = Filter.IsNotNull("Subject");
+
+            List<Guid> guids = request.GetEntityIds<Note>(projectId, filter).GetAwaiter().GetResult();
+
+            string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "notesids", request.ApiVersion, request.RequesterId, request.TokenInfo.Token);
+            expectedUrl += "&filter=" + AproplanApiUtility.EncodeUrl(filter.ToString()) + "&projectid=" + projectId;
+
+            Assert.AreEqual(expectedUrl, FakeWebRequest.Instance.UriCalled[0].ToString());
+            Assert.AreEqual(expectedGuid.Count, 2);
+            Assert.AreEqual(expectedGuid[0], guids[0]);
+            Assert.AreEqual(expectedGuid[1],guids[1]);
+            mockWebRequest.Verify();
+        }
+
     }
-
-
 }
