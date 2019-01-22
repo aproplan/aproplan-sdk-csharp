@@ -58,7 +58,8 @@ To make CRUD operations on the entities, you need to use the following methods o
 ### Sync methods
 
 When you need to update your data often in an offline way, you can use sync method that will returns you the data from a specific timestamp. 
-That returned contains nested data then, you need only to call some kind of method:
+That returned contains nested data then, you need only to call some kind of method. There are methods to get data by batch or to get all data, the logic loop is in the method itself.:
+To use those methods, you need to create an instance of Aproplan.Api.Http.Services.SyncService.
 
 * **SyncNotes** To get all notes (points) and nested data like NoteComment, NoteDocument...
 * **SyncForms** To get all forms and nested data like FormItem, FormSection...
@@ -75,7 +76,22 @@ That returned contains nested data then, you need only to call some kind of meth
 * **SyncMeetings** To get all meetings (lists)
 * **SyncAttachmentDocuments** To get all document that user can see through forms or points because they are attached to them
 * **SyncFolderDocuments** To get all documents that user can see through the visibility of folders
+* **SyncCompanyUsers** To get all members of your company
+* **SyncUsers** To get all users with who you worked on all projects you are invited
+* **SyncAccessRights** To get level of access right that exists in APROPLAN. Then, you can already make some access right check in the client App.
+* **SyncNoteBaseVisibilityLostSync** To get all users with who you worked on all projects you are invited
 
+All of those methods exists with the postfix "All", in that case, the api is call after each batch received to be synchronized until now.
+
+```cs
+
+SyncService syncService = new SyncService(requester);
+SyncResult<Project> result = syncService.SyncProjects(null).GetAwaiter().GetResult();
+```
+
+SyncResult has 2 properties: 
+* **Data**: contains the list of entities retrieved in the batch
+* **ContinuationToken**: the token, timestamp to send back to the api to retrieve the next batch. If null, you are synchronized
 
 ### Upload documents
 

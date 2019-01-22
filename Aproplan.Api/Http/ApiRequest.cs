@@ -1,11 +1,13 @@
 ﻿using Aproplan.Api.Http.Utils;
 using Aproplan.Api.Model;
+using Aproplan.Api.Model.AccessRights;
 using Aproplan.Api.Model.Actors;
 using Aproplan.Api.Model.Annotations;
 using Aproplan.Api.Model.Documents;
 using Aproplan.Api.Model.List;
 using Aproplan.Api.Model.Projects;
 using Aproplan.Api.Model.Projects.Config;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -73,7 +75,7 @@ namespace Aproplan.Api.Http
 
         public string ApiRootUrl { get; }
 
-        public RequestLoginState RequestLoginState
+        public virtual RequestLoginState RequestLoginState
         {
             get
             {
@@ -443,50 +445,9 @@ namespace Aproplan.Api.Http
             return await DeleteEntities<T>(new[] { id }, projectId);
         }
 
-        public async Task<SyncResult<Note>> SyncNotes(Guid? projectId, String continuationToken) { return await this.SyncEntity<Note>(continuationToken, projectId); }
-        public async Task<SyncResult<Form>> SyncForms(Guid? projectId, String continuationToken) { return await this.SyncEntity<Form>(continuationToken, projectId); }
-        public async Task<SyncResult<FormTemplate>> SyncFormTemplates(Guid? projectId, String continuationToken) { return await this.SyncEntity<FormTemplate>(continuationToken, projectId); }
-        public async Task<SyncResult<IssueType>> SyncIssueTypes(Guid? projectId, String continuationToken) { return await this.SyncEntity<IssueType>(continuationToken, projectId); }
-        public async Task<SyncResult<Chapter>> SyncChapters(Guid? projectId, String continuationToken) { return await this.SyncEntity<Chapter>(continuationToken, projectId); }
-        public async Task<SyncResult<SubCell>> SyncSubCells(Guid? projectId, String continuationToken) { return await this.SyncEntity<SubCell>(continuationToken, projectId); }
-        public async Task<SyncResult<ParentCell>> SyncParentCells(Guid? projectId, String continuationToken) { return await this.SyncEntity<ParentCell>(continuationToken, projectId); }
-        public async Task<SyncResult<Folder>> SyncFolders(Guid? projectId, String continuationToken) { return await this.SyncEntity<Folder>(continuationToken, projectId); }
-        public async Task<SyncResult<Project>> SyncProjects(String continuationToken) { return await this.SyncEntity<Project>(continuationToken); }
-        public async Task<SyncResult<ContactDetails>> SyncContactDetails(Guid? projectId, String continuationToken) { return await this.SyncEntity<ContactDetails>(continuationToken, projectId); }
-        public async Task<SyncResult<NoteProjectStatus>> SyncProjectStatus(Guid? projectId, String continuationToken) { return await this.SyncEntity<NoteProjectStatus>(continuationToken, projectId); }
-        public async Task<SyncResult<User>> SyncUsers(Guid? projectId, String continuationToken) { return await this.SyncEntity<User>(continuationToken, projectId); }
-        public async Task<SyncResult<Meeting>> SyncMeetings(Guid? projectId, String continuationToken) { return await this.SyncEntity<Meeting>(continuationToken, projectId); }
-        public async Task<SyncResult<Document>> SyncAttachmentDocuments(Guid? projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, "attachmentdocumentsync"); }
-        public async Task<SyncResult<Document>> SyncFolderDocuments(Guid? projectId, String continuationToken) { return await this.SyncEntity<Document>(continuationToken, projectId, "folderdocumentsync"); }
+        
 
-        /// <summary>
-        /// To get all the changes of an entity since a specified point in time
-        /// </summary>
-        /// <typeparam name="T">Kind of entity to get</typeparam>
-        /// <param name="syncStamp">This is the stamp from when the sync need to get differences. If not specified, it means to get data from the beginning. 
-        /// Else it corresponds to the last sync done. Value returned in the SyncTimestamp property of the response headers</param>
-        /// <param name="forcedResourceName">IF the end point to use is not really the name of the entity, you can specify the name of the resource endpoint to use</param>
-        /// <returns>A SyncResult containing the data from the syncStamp you specified and until a new SyncStamp specified in ContinuationToken</returns>
-        protected async Task<SyncResult<T>> SyncEntity<T>(String syncStamp, Guid? projectId = null, String forcedResourceName = null) where T : Entity
-        {
-            string resourceName = forcedResourceName;
-            if (resourceName == null)
-            {
-                resourceName = GetEntityResourceName<T>(GetEntityResourceType.Sync);
-            }
-            IDictionary<String, String> additionalParams = new Dictionary<String, String>();
-            additionalParams["timestamp"] = syncStamp;
-            HttpResponse res = await GetRaw(resourceName, null, null, projectId, additionalParams);
-            var entityList = JsonConvert.DeserializeObject<List<T>>(res.Data, new JsonSerializerSettings
-            {
-                DateTimeZoneHandling = DateTimeZoneHandling.Local
-            });
-            return new SyncResult<T>
-            {
-                Data = entityList,
-                ContinuationToken = res.Headers["SyncTimestamp"]
-            };
-        }
+        
 
         private async Task<T[]> CreateOrUpdateEntities<T>(T[] entities, bool isCreation, Guid? projectId = null, IDictionary<string, string> queryParams = null) where T : Entity
         {
@@ -545,7 +506,7 @@ namespace Aproplan.Api.Http
         }       
 
 
-        private string GetEntityResourceName<T>(GetEntityResourceType type) where T : Entity
+        internal string GetEntityResourceName<T>(GetEntityResourceType type) where T : Entity
         {
             string resourceName = typeof(T).Name.ToLowerInvariant();
             int len = resourceName.Length;
@@ -576,7 +537,7 @@ namespace Aproplan.Api.Http
             return resourceName;
         }
 
-        private bool IsTokenValid()
+        public virtual bool IsTokenValid()
         {
             bool retVal = TokenInfo != null && DateTime.Now < TokenInfo.ValidityLimit;
             return retVal;
@@ -595,6 +556,22 @@ namespace Aproplan.Api.Http
         /// <returns>The response of the request as a string</returns>
         public async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, bool isFile = false)
         {
+            if(_logger != null)
+            {
+                string debugMsg = $"API call {method} to {uri} \r\n\r\n";
+                if(queryParams != null && queryParams.Count > 0)
+                {
+                    debugMsg += "\r\nqueryParams: \r\n";
+                    foreach(var prm in queryParams)
+                    {
+                        debugMsg += "- " + prm.Key + " = " + (prm.Value == null ? "<null>" : prm.Value) + "\r\n";
+                    }
+                }
+                debugMsg += "\r\n data: " + data == null ? "<null>" : (isFile ? "file content" : data);
+                _logger.LogDebug(debugMsg);
+                
+            }
+
             int nb = 0;
             if (uri != _resourceRenew)
             {
@@ -655,6 +632,14 @@ namespace Aproplan.Api.Http
                     {
                         StreamReader streamReader = new StreamReader(stream);
                         string dataString = streamReader.ReadToEnd();
+
+                        if (_logger != null)
+                        {
+                            string debugMsg = $"API response of {method} to {uri}\r\n\r\n";
+                            debugMsg += "\r\n data: " + dataString == null ? "<null>" : dataString;
+                            _logger.LogDebug(debugMsg);
+                        }
+
                         return new HttpResponse
                         {
                             Data = dataString,
@@ -743,7 +728,7 @@ namespace Aproplan.Api.Http
 
         #region Constructors
 
-        public ApiRequest(string login, string password, Guid requesterId, string apiVersion = "13", string rootUrl = "https://app.aproplan.com")
+        public ApiRequest(string login, string password, Guid requesterId, string apiVersion = "20", string rootUrl = "https://app.aproplan.com", ILogger logger = null)
         {
             // Force TLS 1.2
             System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -775,6 +760,7 @@ namespace Aproplan.Api.Http
                 new Tuple<ApiMethod, String>(ApiMethod.Post, ApiRootUrl + "simpleloginsecure"),
                 new Tuple<ApiMethod, String>(ApiMethod.Post, ApiRootUrl + "users")
             };
+
             _resourcesLogin = new List<string>
             {
                 ApiRootUrl + "loginwithfullinfosecure",
@@ -782,8 +768,9 @@ namespace Aproplan.Api.Http
                 ApiRootUrl + "simpleloginsecure"
             };
 
-
             _resourceRenew = ApiRootUrl + "renewtoken";
+
+            _logger = logger; 
         }
 
         public ApiRequest(string login, string password, Guid requesterId, string rootUrl = null) : this(login, password, requesterId, DefaultApiVersion, rootUrl)
@@ -808,8 +795,8 @@ namespace Aproplan.Api.Http
         readonly List<Tuple<ApiMethod, string>> _resourcesWithoutConnection;
         readonly List<string> _resourcesLogin;
         readonly string _resourceRenew;
-
-        public static string DefaultApiVersion = "13";
+        private ILogger _logger;
+        public const string DefaultApiVersion = "20";
         private static string DefaultApiRootUrl = "https://api.aproplan.com/";
 
         #endregion

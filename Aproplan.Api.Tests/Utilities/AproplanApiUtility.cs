@@ -8,7 +8,9 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace Aproplan.Api.Tests.Utilities
 {
@@ -16,7 +18,24 @@ namespace Aproplan.Api.Tests.Utilities
     {
         public static readonly Guid REQUESTER_ID = Guid.NewGuid();
         public static readonly string ROOT_URL = "https://api.aproplan.com/";
-        public static readonly string API_VERSION = "13";
+        public static readonly string API_VERSION = "20";
+
+        public static string EncodeUrl(string urlPart)
+        {
+            var reg = new Regex(@"%[a-f0-9]{2}");
+            urlPart = HttpUtility.UrlEncode(urlPart);
+            return reg.Replace(urlPart, m => m.Value.ToUpperInvariant());
+        }
+        public static Mock<ApiRequest> CreateMockRequester(bool connected = true)
+        {
+            Mock<ApiRequest> mockApi = new Mock<ApiRequest>(AproplanApiUtility.REQUESTER_ID, AproplanApiUtility.ROOT_URL);
+            if (connected)
+            {
+                mockApi.SetupGet((a) => a.RequestLoginState).Returns(RequestLoginState.Connected);
+                mockApi.Setup((a) => a.IsTokenValid()).Returns(true);
+            }
+            return mockApi;
+        }
 
         public static ApiRequest CreateRequester(Guid? requesterId = null, string version = null, string rootUrl = null)
         {
