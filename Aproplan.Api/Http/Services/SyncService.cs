@@ -22,14 +22,13 @@ namespace Aproplan.Api.Http.Services
 
         public async Task<SyncResult<CompanyUser>> SyncCompanyUsers(String continuationToken) { return await SyncEntity<CompanyUser>(continuationToken); }
         public async Task<SyncResult<User>> SyncUsers(string continuationToken) { return await SyncEntity<User>(continuationToken); }
-        public async Task<SyncResult<AccessRightBase>> SyncAccessRight(string continuationToken) { return await SyncEntity<AccessRightBase>(continuationToken); }
-        public async Task<SyncResult<FormTemplate>> SyncFormTemplate(string continuationToken) { return await SyncEntity<FormTemplate>(continuationToken); }
+        public async Task<SyncResult<AccessRightBase>> SyncAccessRights(string continuationToken) { return await SyncEntity<AccessRightBase>(continuationToken); }
+        public async Task<SyncResult<FormTemplate>> SyncFormTemplates(string continuationToken) { return await SyncEntity<FormTemplate>(continuationToken); }
         public async Task<SyncResult<Project>> SyncProjects(String continuationToken) { return await this.SyncEntity<Project>(continuationToken); }
 
         public async Task<SyncResult<Note>> SyncNotes(Guid projectId, String continuationToken) { return await SyncEntity<Note>(continuationToken, projectId); }
         public async Task<SyncResult<NoteBase>> SyncNoteBaseVisibilityLostSync(Guid projectId, String continuationToken) { return await SyncEntity<NoteBase>(continuationToken, projectId, null, "notebasevisibilitylostsync"); }
-        public async Task<SyncResult<Form>> SyncForms(Guid projectId, String continuationToken) { return await SyncEntity<Form>(continuationToken, projectId); }
-        public async Task<SyncResult<FormTemplate>> SyncFormTemplates(Guid projectId, String continuationToken) { return await SyncEntity<FormTemplate>(continuationToken, projectId); }
+        public async Task<SyncResult<Form>> SyncForms(Guid projectId, String continuationToken) { return await SyncEntity<Form>(continuationToken, projectId); }        
         public async Task<SyncResult<IssueType>> SyncIssueTypes(Guid projectId, String continuationToken) { return await SyncEntity<IssueType>(continuationToken, projectId); }
         public async Task<SyncResult<Chapter>> SyncChapters(Guid projectId, String continuationToken) { return await SyncEntity<Chapter>(continuationToken, projectId); }
         public async Task<SyncResult<SubCell>> SyncSubCells(Guid projectId, String continuationToken) { return await SyncEntity<SubCell>(continuationToken, projectId); }
@@ -46,14 +45,13 @@ namespace Aproplan.Api.Http.Services
 
         public async Task<SyncResult<CompanyUser>> SyncAllCompanyUsers(String continuationToken, SyncBatchCallback<CompanyUser> callback = null) { return await SyncAllEntities<CompanyUser>(continuationToken, null, null, null, callback); }
         public async Task<SyncResult<User>> SyncAllUsers(string continuationToken, SyncBatchCallback<User> callback = null) { return await SyncAllEntities<User>(continuationToken, null, null, null, callback); }
-        public async Task<SyncResult<AccessRightBase>> SyncAllAccessRight(string continuationToken, SyncBatchCallback<AccessRightBase> callback = null) { return await SyncAllEntities<AccessRightBase>(continuationToken, null, null, null, callback); }
-        public async Task<SyncResult<FormTemplate>> SyncAllFormTemplate(string continuationToken, SyncBatchCallback<FormTemplate> callback = null) { return await SyncAllEntities<FormTemplate>(continuationToken, null, null, null, callback); }
+        public async Task<SyncResult<AccessRightBase>> SyncAllAccessRights(string continuationToken, SyncBatchCallback<AccessRightBase> callback = null) { return await SyncAllEntities<AccessRightBase>(continuationToken, null, null, null, callback); }
+        public async Task<SyncResult<FormTemplate>> SyncAllFormTemplates(string continuationToken, SyncBatchCallback<FormTemplate> callback = null) { return await SyncAllEntities<FormTemplate>(continuationToken, null, null, null, callback); }
         public async Task<SyncResult<Project>> SyncAllProjects(String continuationToken, SyncBatchCallback<Project> callback = null) { return await this.SyncAllEntities<Project>(continuationToken, null, null, null, callback); }
 
         public async Task<SyncResult<Note>> SyncAllNotes(Guid projectId, String continuationToken, SyncBatchCallback<Note> callback = null) { return await SyncAllEntities<Note>(continuationToken, projectId, null, null, callback); }
-        public async Task<SyncResult<NoteBase>> SyncAllNoteBaseVisibilityLostSync(Guid projectId, String continuationToken, SyncBatchCallback<NoteBase> callback = null) { return await SyncAllEntities<NoteBase>(continuationToken, projectId, null, "notebasevisibilitylostsync", callback); }
-        public async Task<SyncResult<Form>> SyncAllForms(Guid projectId, String continuationToken, SyncBatchCallback<Form> callback = null) { return await SyncAllEntities<Form>(continuationToken, projectId, null, null, callback); }
-        public async Task<SyncResult<FormTemplate>> SyncAllFormTemplates(Guid projectId, String continuationToken, SyncBatchCallback<FormTemplate> callback = null) { return await SyncAllEntities<FormTemplate>(continuationToken, projectId); }
+        public async Task<SyncResult<NoteBase>> SyncAllNoteBaseVisibilityLost(Guid projectId, String continuationToken, SyncBatchCallback<NoteBase> callback = null) { return await SyncAllEntities<NoteBase>(continuationToken, projectId, null, "notebasevisibilitylostsync", callback); }
+        public async Task<SyncResult<Form>> SyncAllForms(Guid projectId, String continuationToken, SyncBatchCallback<Form> callback = null) { return await SyncAllEntities<Form>(continuationToken, projectId, null, null, callback); }        
         public async Task<SyncResult<IssueType>> SyncAllIssueTypes(Guid projectId, String continuationToken, SyncBatchCallback<IssueType> callback = null) { return await SyncAllEntities<IssueType>(continuationToken, projectId, null, null, callback); }
         public async Task<SyncResult<Chapter>> SyncAllChapters(Guid projectId, String continuationToken, SyncBatchCallback<Chapter> callback = null) { return await SyncAllEntities<Chapter>(continuationToken, projectId, null, null, callback); }
         public async Task<SyncResult<SubCell>> SyncAllSubCells(Guid projectId, String continuationToken, SyncBatchCallback<SubCell> callback = null) { return await SyncAllEntities<SubCell>(continuationToken, projectId, null, null, callback); }
