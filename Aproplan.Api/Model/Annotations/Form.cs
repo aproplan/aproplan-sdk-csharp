@@ -65,5 +65,11 @@ namespace Aproplan.Api.Model.Annotations
         {
             get; set;
         }
+
+        public List<FormSignature> Signatures
+        {
+            get;
+            set;
+        }
     }
 }
