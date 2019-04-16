@@ -27,12 +27,12 @@ namespace Aproplan.Api.Model.Annotations
             {
                 Id = Guid.NewGuid(),
                 FormId = formId,
-                SectionRuleId = this.Id,
-                DisplayOrder = this.DisplayOrder,
-                Title = this.Title,
-                Description = this.Description,
-                Code = this.Code,
-                VisibleCondition = this.VisibleCondition,
+                SectionRuleId = Id,
+                DisplayOrder = DisplayOrder,
+                Title = Title,
+                Description = Description,
+                Code = Code,
+                VisibleCondition = VisibleCondition,
             };
         }
     }

@@ -74,17 +74,17 @@ namespace Aproplan.Api.Model.Annotations
         public Form ToForm()
         {
             var formId = Guid.NewGuid();
-            var sections = this.SectionRules?.Select(sr => sr.ToSection(formId)).ToList();
+            var sections = SectionRules?.Select(sr => sr.ToSection(formId)).ToList();
 
             return new Form
             {
                 Id = formId,
-                TemplateId = this.Id,
-                Subject = this.Subject,
-                Type = this.Type,
-                Language = this.Language,
+                TemplateId = Id,
+                Subject = Subject,
+                Type = Type,
+                Language = Language,
                 Sections = sections,
-                Items = this.Questions?.Select(q => q.ToFormItem(formId, sections)).ToList(),
+                Items = Questions?.Select(q => q.ToFormItem(formId, sections)).ToList(),
             };
         }
     }
