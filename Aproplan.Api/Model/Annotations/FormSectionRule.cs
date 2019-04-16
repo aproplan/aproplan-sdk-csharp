@@ -28,7 +28,11 @@ namespace Aproplan.Api.Model.Annotations
                 Id = Guid.NewGuid(),
                 FormId = formId,
                 SectionRuleId = this.Id,
-                DisplayOrder = this.DisplayOrder
+                DisplayOrder = this.DisplayOrder,
+                Title = this.Title,
+                Description = this.Description,
+                Code = this.Code,
+                VisibleCondition = this.VisibleCondition,
             };
         }
     }
