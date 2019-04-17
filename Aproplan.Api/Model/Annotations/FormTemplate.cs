@@ -65,8 +65,12 @@ namespace Aproplan.Api.Model.Annotations
             get; set;
         }
 
-
         public bool MustDisplayElementsCode
+        {
+            get; set;
+        }
+
+        public bool IsSignatureAllowed
         {
             get; set;
         }
@@ -85,6 +89,7 @@ namespace Aproplan.Api.Model.Annotations
                 Language = Language,
                 Sections = sections,
                 Items = Questions?.Select(q => q.ToFormItem(formId, sections)).ToList(),
+                IsSignatureAllowed = IsSignatureAllowed,
             };
         }
     }
