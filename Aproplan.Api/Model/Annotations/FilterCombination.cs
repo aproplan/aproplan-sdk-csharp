@@ -15,5 +15,16 @@ namespace Aproplan.Api.Model.Annotations
 
         public FormFilterCondition RightFilter { get; set; }
         public FormFilterCondition LeftFilter { get; set; }
+
+        public override FormFilterCondition Copy()
+        {
+            var copy = new FilterCombination
+            {
+                Type = Type,
+                RightFilter = RightFilter.Copy(),
+                LeftFilter = LeftFilter.Copy()
+            };
+            return copy;
+        }
     }
 }

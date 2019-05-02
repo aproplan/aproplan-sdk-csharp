@@ -80,15 +80,39 @@ namespace Aproplan.Api.Model.Annotations
             var formId = Guid.NewGuid();
             var sections = SectionRules?.Select(sr => sr.ToSection(formId)).ToList();
 
+            Dictionary<Guid, Guid> mapQuestions = new Dictionary<Guid, Guid>();
+            List<FormItem> items = new List<FormItem>();
+            Questions?.ForEach((question) =>
+            {
+                FormItem item = question.ToFormItem(formId, sections);
+                mapQuestions.Add(question.Id, item.Id);
+                items.Add(item);                
+            });
+
+            sections.ForEach((section) =>
+            {
+                if(section.VisibleCondition != null)
+                    FormFilterCondition.MapVisibleConditionQuestionToItemId(section.VisibleCondition, mapQuestions);
+            });
+
+            items.ForEach((item) =>
+            {
+                if (item.VisibleCondition != null)
+                {
+                    FormFilterCondition.MapVisibleConditionQuestionToItemId(item.VisibleCondition, mapQuestions);
+                }
+            });
+
             return new Form
             {
                 Id = formId,
                 TemplateId = Id,
                 Subject = Subject,
+                MustDisplayElementsCode = MustDisplayElementsCode,
                 Type = Type,
                 Language = Language,
                 Sections = sections,
-                Items = Questions?.Select(q => q.ToFormItem(formId, sections)).ToList(),
+                Items = items,
                 IsSignatureAllowed = IsSignatureAllowed,
             };
         }

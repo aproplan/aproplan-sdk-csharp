@@ -14,5 +14,17 @@ namespace Aproplan.Api.Model.Annotations
 
         public Guid ItemId { get; set; }
 
+        public override FormFilterCondition Copy()
+        {
+            var copy = new FilterProperty
+            {
+                IsConform = IsConform,
+                Value = Value,
+                NotApplicable = NotApplicable,
+                ItemId = ItemId
+            };
+            return copy;
+        }
+
     }
 }

@@ -30,21 +30,24 @@ namespace Aproplan.Api.Model.Annotations
 
         public FormItem ToFormItem(Guid formId, List<FormSection> sections)
         {
-            Guid sectionId = sections.Find(x => x.SectionRuleId == SectionRuleId).Id;
+            FormSection section = sections.Find(x => x.SectionRuleId == SectionRuleId);
 
-            return new FormItem
+            var formItem = new FormItem
             {
                 FormId = formId,
                 Template = Template,
-                SectionId = sectionId,
+                SectionId = section.Id,
                 QuestionId = Id,
                 DisplayOrder = DisplayOrder,
                 Title = Title,
                 ItemType = ItemType,
                 Description = Description,
                 Code = Code,
-                VisibleCondition = VisibleCondition,
+                VisibleCondition = VisibleCondition == null ? null : VisibleCondition.Copy()
             };
+            return formItem;
         }
+
+        
     }
 }

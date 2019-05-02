@@ -81,9 +81,11 @@
     <Compile Include="ApiRequest\LoginTests.cs" />
     <Compile Include="ApiRequest\ApiRequestTests.cs" />
     <Compile Include="FakeWebRequest.cs" />
+    <Compile Include="Model\Annotations\FormTemplateTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\SyncServiceTests.cs" />
     <Compile Include="Utilities\AproplanApiUtility.cs" />
+    <Compile Include="Utilities\Models\FormTemplateUtility.cs" />
     <Compile Include="Utilities\Models\NoteUtility.cs" />
     <Compile Include="Utilities\Models\ProjectUtility.cs" />
     <Compile Include="Utilities\Models\UserUtility.cs" />

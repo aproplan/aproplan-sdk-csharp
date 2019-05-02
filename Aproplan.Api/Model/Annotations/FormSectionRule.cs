@@ -32,7 +32,7 @@ namespace Aproplan.Api.Model.Annotations
                 Title = Title,
                 Description = Description,
                 Code = Code,
-                VisibleCondition = VisibleCondition,
+                VisibleCondition = VisibleCondition == null ? null: VisibleCondition.Copy(),
             };
         }
     }
