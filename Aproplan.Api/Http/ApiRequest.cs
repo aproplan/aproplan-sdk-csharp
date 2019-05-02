@@ -281,7 +281,7 @@ namespace Aproplan.Api.Http
             {
                 idsObj[i++] = id;
             }
-            List<T> entities = await GetEntityList<T>(projectId, Filter.In("Id", idsObj));
+            List<T> entities = await GetEntityList<T>(projectId, Filter.In("Id", idsObj), pathToLoad, queryParams);
             return entities;
         }
 

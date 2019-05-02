@@ -142,6 +142,38 @@ namespace Aproplan.Api.Tests
         }
 
         [TestCase]
+        public void GetEntityByIdsWithQueryParamsOK()
+        {
+            var projectId = Guid.NewGuid();
+            Note note = NoteUtility.GetFakeSimpleNotes()[0];
+
+            string content = JsonConvert.SerializeObject(new List<Note> { note }, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            });
+
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
+            mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
+
+            Guid[] ids = new Guid[] { note.Id };
+            List<Note> resultNotes = request.GetEntityByIds<Note>(ids, projectId, null, new Dictionary<string, string> { { "testparam", "john" } }).GetAwaiter().GetResult();
+
+            string filter = Filter.Eq("Id", note.Id).ToString();
+
+
+            string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "notes", request.ApiVersion, request.RequesterId, request.TokenInfo.Token);
+            expectedUrl += "&filter=" + AproplanApiUtility.EncodeUrl(filter) + "&projectid=" + projectId + "&testparam=john";
+
+            Assert.AreEqual(expectedUrl, FakeWebRequest.Instance.UriCalled[0].ToString());
+
+            Assert.AreEqual(1, resultNotes.Count);
+            Assert.AreEqual(note.Id, resultNotes[0].Id);
+
+
+            mockWebRequest.Verify();
+        }
+
+        [TestCase]
         public void GetEntityCountOK()
         {
             var projectId = Guid.NewGuid();
