@@ -234,10 +234,10 @@ namespace Aproplan.Api.Http
         /// <param name="filter">The filter to apply</param>
         /// <param name="pathToLoad">To know which property to load from the entity</param>
         /// <returns>The list of entities corresponding to criteria</returns>
-        public async Task<List<T>> GetEntityList<T>(Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<List<T>> GetEntityList<T>(Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
-            string res = (await GetRaw(resourceName, filter, pathToLoad, projectId)).Data;
+            string res = (await GetRaw(resourceName, filter, pathToLoad, projectId, queryParams)).Data;
             var entityList = JsonConvert.DeserializeObject<List<T>>(res, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Local
@@ -252,9 +252,9 @@ namespace Aproplan.Api.Http
         /// <param name="id">The id of the entity to retrieve</param>
         /// <param name="pathToLoad">To know which property to load from the entity</param>
         /// <returns>The entity corresponding to the id</returns>
-        public async Task<T> GetEntityById<T>(Guid id, Guid? projectId = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<T> GetEntityById<T>(Guid id, Guid? projectId = null, PathToLoad pathToLoad = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
-            List<T> entities = await GetEntityList<T>(projectId, Filter.Eq("Id", id), pathToLoad);
+            List<T> entities = await GetEntityList<T>(projectId, Filter.Eq("Id", id), pathToLoad, queryParams);
 
             if (entities.Count == 1)
                 return entities[0];
@@ -268,11 +268,11 @@ namespace Aproplan.Api.Http
         /// <param name="ids">The list of id to retrieve of the specific entity type</param>
         /// <param name="pathToLoad">To know which property to load from the entity</param>
         /// <returns>The list of entities corresponding to the list of id</returns>
-        public async Task<List<T>> GetEntityByIds<T>(Guid[] ids, Guid? projectId = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<List<T>> GetEntityByIds<T>(Guid[] ids, Guid? projectId = null, PathToLoad pathToLoad = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
             if (ids.Length == 1)
             {
-                T entity = await GetEntityById<T>(ids[0], projectId, pathToLoad);
+                T entity = await GetEntityById<T>(ids[0], projectId, pathToLoad, queryParams);
                 return new List<T>() { entity };
             }
             object[] idsObj = new object[ids.Length];
@@ -292,10 +292,10 @@ namespace Aproplan.Api.Http
         /// <param name="filter">The filter to apply</param>
         /// <param name="pathToLoad">To know which property to load from the entity</param>
         /// <returns>The list of ids corresponding to criteria</returns>
-        public async Task<List<Guid>> GetEntityIds<T>(Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<List<Guid>> GetEntityIds<T>(Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.Ids);
-            string res = (await GetRaw(resourceName, filter, pathToLoad, projectId)).Data;
+            string res = (await GetRaw(resourceName, filter, pathToLoad, projectId, queryParams)).Data;
             var ids = JsonConvert.DeserializeObject<List<Guid>>(res, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Local
@@ -309,10 +309,10 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T"></typeparam>
         /// <param name="filter"></param>
         /// <returns></returns>
-        public async Task<int> GetEntityCount<T>(Guid? projectId = null, Filter filter = null) where T : Entity
+        public async Task<int> GetEntityCount<T>(Guid? projectId = null, Filter filter = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.Count);
-            string res = (await GetRaw(resourceName, filter, null, projectId)).Data;
+            string res = (await GetRaw(resourceName, filter, null, projectId, queryParams)).Data;
             return int.Parse(res);
         }
 
@@ -395,7 +395,7 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of the entity to update</typeparam>
         /// <param name="entity">The entity to update</param>
         /// <returns>The entity updated</returns>
-        public async Task<T> UpdateEntity<T>(T entity, Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null) where T : Entity
+        public async Task<T> UpdateEntity<T>(T entity, Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
             T[] entities = null;
             if (entity != null)
@@ -403,8 +403,8 @@ namespace Aproplan.Api.Http
                 entities = new[] { entity };
             }
 
-
-            Dictionary<string, string> queryParams = new Dictionary<string, string>();
+            if(queryParams == null)
+                queryParams = new Dictionary<string, string>();
             if (filter != null)
                 queryParams.Add("filter", filter.ToString());
             if (pathToLoad != null)
@@ -420,11 +420,12 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of entity to delete</typeparam>
         /// <param name="ids">The list of id of the entities to delete</param>
         /// <returns>A boolean to specify that the delete was successfull</returns>
-        public async Task<bool> DeleteEntities<T>(IEnumerable<Guid> ids, Guid? projectId = null) where T : Entity
+        public async Task<bool> DeleteEntities<T>(IEnumerable<Guid> ids, Guid? projectId = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
             string url = ApiRootUrl + resourceName;
-            IDictionary<String, String> queryParams = new Dictionary<String, String>();
+            if(queryParams == null)
+                queryParams = new Dictionary<string, string>();
             if (projectId.HasValue)
                 queryParams.Add("projectid", projectId.Value.ToString());
             await Request(url, ApiMethod.Delete, queryParams, JsonConvert.SerializeObject(ids, new JsonSerializerSettings
@@ -440,9 +441,9 @@ namespace Aproplan.Api.Http
         /// <typeparam name="T">The type of entity to delete</typeparam>
         /// <param name="id">The id of the entity to delete</param>
         /// <returns>A boolean to specify that the delete was successfull</returns>
-        public async Task<bool> DeleteEntity<T>(Guid id, Guid? projectId = null) where T : Entity
+        public async Task<bool> DeleteEntity<T>(Guid id, Guid? projectId = null, Dictionary<string, string> queryParams = null) where T : Entity
         {
-            return await DeleteEntities<T>(new[] { id }, projectId);
+            return await DeleteEntities<T>(new[] { id }, projectId, queryParams);
         }
 
         
