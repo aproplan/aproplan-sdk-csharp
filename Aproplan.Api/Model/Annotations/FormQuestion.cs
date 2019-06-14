@@ -43,11 +43,12 @@ namespace Aproplan.Api.Model.Annotations
                 ItemType = ItemType,
                 Description = Description,
                 Code = Code,
-                VisibleCondition = VisibleCondition == null ? null : VisibleCondition.Copy()
+                VisibleCondition = VisibleCondition == null ? null : VisibleCondition.Copy(),
+                ConformityRules = ConformityRules,
+                AllowAttachComment = AllowAttachComment,
+                AllowAttachPicture = AllowAttachPicture,
             };
             return formItem;
         }
-
-        
     }
 }
