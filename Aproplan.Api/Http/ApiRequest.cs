@@ -45,7 +45,7 @@ namespace Aproplan.Api.Http
         Connecting
     }
 
-    public class ApiRequest: IDisposable
+    public class ApiRequest : IApiRequest
     {
         public event EventHandler<User> UserChanged;
         #region Properties
