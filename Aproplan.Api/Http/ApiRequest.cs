@@ -164,6 +164,45 @@ namespace Aproplan.Api.Http
             return await Login();
         }
 
+        public async Task<User> Authorize(string token)
+        {
+            User user = null;
+            string url = ApiRootUrl + "checkloginbim";
+            try
+            {
+                if (_renewTimer != null)
+                    _renewTimer.Dispose();
+
+                _isConnecting = true;
+
+                string alias = (await Request(url, ApiMethod.Get, new Dictionary<string, string> { { "t", token } })).Data;
+                if (String.IsNullOrEmpty(alias))
+                {
+                    throw new ApiException("Your token is not correct", "INVALID_CREDENTIALS", null, url, 401, "GET");
+                }
+                TokenInfo = new TokenInfo();
+                TokenInfo.Token = Guid.Parse(token);
+                TokenInfo.ValidityStart = DateTime.Now; //TODO: temp to remove
+                TokenInfo.ValidityLimit = DateTime.Now.AddMinutes(10); //TODO: temp to remove
+
+                user = (await GetEntityList<User>(null, Filter.Eq("Alias", alias), new PathToLoad("Person.Language,Person.Country"))).FirstOrDefault();
+                if (user == null)
+                {
+                    throw new ApiException("Your token is not correct", "INVALID_CREDENTIALS", null, url, 401, "GET");
+                }
+                TimeSpan tokenValidityPeriod = TokenInfo.ValidityLimit.ToUniversalTime().Subtract(DateTime.Now.ToUniversalTime());
+                int validityPeriod = Convert.ToInt32(tokenValidityPeriod.TotalMilliseconds - 60000 * 2);
+                RenewTokenLoop(validityPeriod);
+            }
+            finally
+            {
+                _isConnecting = false;
+                CurrentUser = user;
+            }
+
+            return CurrentUser;
+        }
+
         public void Logout()
         {
             if (_renewTimer != null)
@@ -194,7 +233,7 @@ namespace Aproplan.Api.Http
             try
             {
                 Console.WriteLine("Renew token call...");
-                if(TokenInfo == null)
+                if (TokenInfo == null)
                 {
                     throw new ApiException("You must be login before to make a renew token");
                 }
@@ -403,7 +442,7 @@ namespace Aproplan.Api.Http
                 entities = new[] { entity };
             }
 
-            if(queryParams == null)
+            if (queryParams == null)
                 queryParams = new Dictionary<string, string>();
             if (filter != null)
                 queryParams.Add("filter", filter.ToString());
@@ -424,7 +463,7 @@ namespace Aproplan.Api.Http
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
             string url = ApiRootUrl + resourceName;
-            if(queryParams == null)
+            if (queryParams == null)
                 queryParams = new Dictionary<string, string>();
             if (projectId.HasValue)
                 queryParams.Add("projectid", projectId.Value.ToString());
@@ -446,9 +485,9 @@ namespace Aproplan.Api.Http
             return await DeleteEntities<T>(new[] { id }, projectId, queryParams);
         }
 
-        
 
-        
+
+
 
         private async Task<T[]> CreateOrUpdateEntities<T>(T[] entities, bool isCreation, Guid? projectId = null, IDictionary<string, string> queryParams = null) where T : Entity
         {
@@ -504,7 +543,7 @@ namespace Aproplan.Api.Http
             }
 
             return await Request(ApiRootUrl + resourceName, ApiMethod.Get, queryParams);
-        }       
+        }
 
 
         internal string GetEntityResourceName<T>(GetEntityResourceType type) where T : Entity
@@ -557,20 +596,20 @@ namespace Aproplan.Api.Http
         /// <returns>The response of the request as a string</returns>
         public async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, bool isFile = false)
         {
-            if(_logger != null)
+            if (_logger != null)
             {
                 string debugMsg = $"API call {method} to {uri} \r\n\r\n";
-                if(queryParams != null && queryParams.Count > 0)
+                if (queryParams != null && queryParams.Count > 0)
                 {
                     debugMsg += "\r\nqueryParams: \r\n";
-                    foreach(var prm in queryParams)
+                    foreach (var prm in queryParams)
                     {
                         debugMsg += "- " + prm.Key + " = " + (prm.Value == null ? "<null>" : prm.Value) + "\r\n";
                     }
                 }
                 debugMsg += "\r\n data: " + data == null ? "<null>" : (isFile ? "file content" : data);
                 _logger.LogDebug(debugMsg);
-                
+
             }
 
             int nb = 0;
@@ -581,7 +620,7 @@ namespace Aproplan.Api.Http
             }
             if (!_resourcesLogin.Contains(uri) && uri != _resourceRenew)
             {
-                while (RequestLoginState == RequestLoginState.Connecting || RequestLoginState == RequestLoginState.Renewing && nb < 10)
+                while ((RequestLoginState == RequestLoginState.Connecting || RequestLoginState == RequestLoginState.Renewing) && nb < 10)
                 {
                     Thread.Sleep(300);
                     nb++;
@@ -747,6 +786,7 @@ namespace Aproplan.Api.Http
             ApiRootUrl = rootUrl[rootUrl.Length - 1] == '/' ? rootUrl + "rest/" : rootUrl + "/rest/";
             _resourcesWithoutConnection = new List<Tuple<ApiMethod, string>>
             {
+                new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "checkloginbim"),
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countries"),
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countriesids"),
                 new Tuple<ApiMethod, String>(ApiMethod.Get, ApiRootUrl + "countrycount"),
@@ -764,14 +804,15 @@ namespace Aproplan.Api.Http
 
             _resourcesLogin = new List<string>
             {
+                ApiRootUrl + "checkloginbim",
                 ApiRootUrl + "loginwithfullinfosecure",
                 ApiRootUrl + "loginsecure",
-                ApiRootUrl + "simpleloginsecure"
+                ApiRootUrl + "simpleloginsecure",
             };
 
             _resourceRenew = ApiRootUrl + "renewtoken";
 
-            _logger = logger; 
+            _logger = logger;
         }
 
         public ApiRequest(string login, string password, Guid requesterId, string rootUrl = null) : this(login, password, requesterId, DefaultApiVersion, rootUrl)

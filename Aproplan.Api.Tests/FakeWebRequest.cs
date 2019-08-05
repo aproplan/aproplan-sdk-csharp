@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace Aproplan.Api.Tests
 {
-    public class FakeWebRequest: IWebRequestCreate
+    public class FakeWebRequest : IWebRequestCreate
     {
         public static FakeWebRequest Instance
         {
             get
             {
-                if(_instance == null)
+                if (_instance == null)
                 {
                     _instance = new FakeWebRequest();
                 }
@@ -99,22 +99,43 @@ namespace Aproplan.Api.Tests
             request.Setup(s => s.GetResponseAsync()).Returns(Task.FromResult((WebResponse)response.Object));
 
             var headers = new WebHeaderCollection();
-            if(headersDic != null)
+            if (headersDic != null)
             {
-                foreach(var hkeyVal in headersDic)
+                foreach (var hkeyVal in headersDic)
                 {
                     headers.Add(hkeyVal.Key, hkeyVal.Value);
                 }
             }
-            
+
             response.SetupGet(s => s.Headers).Returns(headers);
 
-            var requestStream= new MemoryStream();
+            var requestStream = new MemoryStream();
             request.Setup(s => s.GetRequestStream()).Returns(requestStream);
             NextRequest = request.Object;
 
             return request;
         }
+
+        public static Mock<HttpWebRequest> CreateRequestWithResponsesSequences(params string[] responseContents)
+        {
+            var request = new Mock<HttpWebRequest>();
+            var response = new Mock<HttpWebResponse>(MockBehavior.Loose);
+            response.Setup(c => c.StatusCode).Returns(HttpStatusCode.OK);
+            var setupSequence = response.SetupSequence(c => c.GetResponseStream());
+            foreach (var responseContent in responseContents)
+            {
+                var responseStream = new MemoryStream(Encoding.UTF8.GetBytes(responseContent));
+                setupSequence = setupSequence.Returns(responseStream);
+            }
+            request.Setup(s => s.GetResponseAsync()).Returns(Task.FromResult((WebResponse)response.Object));
+
+            var requestStream = new MemoryStream();
+            request.Setup(s => s.GetRequestStream()).Returns(requestStream);
+            NextRequest = request.Object;
+
+            return request;
+        }
+
 
         private FakeWebRequest()
         {

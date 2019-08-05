@@ -34,6 +34,7 @@ namespace Aproplan.Api.Http
         bool IsTokenValid();
         Task<User> Login();
         Task<User> Login(string login, string password);
+        Task<User> Authorize(string token);
         void Logout();
         Task<TokenInfo> RenewToken();
         Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, bool isFile = false);

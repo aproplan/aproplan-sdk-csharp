@@ -8,9 +8,13 @@ using Aproplan.Api.Tests.Utilities;
 using NUnit.Framework;
 using Moq;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
+using System.IO;
+using System.Text;
+using System.Collections.Generic;
 
 namespace Aproplan.Api.Tests
-{    
+{
     [TestFixture]
     public class LoginTests
     {
@@ -56,7 +60,7 @@ namespace Aproplan.Api.Tests
             mockWebRequest.Verify();
         }
 
-        [TestCase]        
+        [TestCase]
         public void LoginWithBadCredentialsReturnsUser()
         {
             WebRequest.RegisterPrefix(request.ApiRootUrl, FakeWebRequest.Instance);
@@ -82,7 +86,7 @@ namespace Aproplan.Api.Tests
                 else
                     Assert.Fail("Wrong exception thrown");
             }
-            
+
         }
 
         [TestCase]
@@ -93,7 +97,7 @@ namespace Aproplan.Api.Tests
                 request.Login().GetAwaiter().GetResult();
             });
             Assert.AreEqual("UserLogin", ex.ParamName);
-            
+
         }
 
         [TestCase]
@@ -134,7 +138,7 @@ namespace Aproplan.Api.Tests
 
             Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponse(content);
             mockWebRequest.SetupSet(r => r.Method = "GET").Verifiable();
-            
+
             var tokenInfo = request.RenewToken().GetAwaiter().GetResult();
             string expectedUrl = AproplanApiUtility.BuildRestUrl(request.ApiRootUrl, "renewtoken", request.ApiVersion, request.RequesterId, oldToken);
             Assert.AreEqual(expectedUrl, FakeWebRequest.Instance.UriCalled[1].ToString());
@@ -168,7 +172,7 @@ namespace Aproplan.Api.Tests
             catch (Exception ex)
             {
                 ApiException apiException = ex as ApiException;
-                if(apiException != null)
+                if (apiException != null)
                 {
                     Assert.AreEqual("Your current token is invalid, use login method instead", apiException.Message);
                     Assert.AreEqual("TOKEN_EXPIRED", apiException.Code);
@@ -178,7 +182,31 @@ namespace Aproplan.Api.Tests
                     Assert.Fail("Wrong exception thrown");
                 }
             }
+
+        }
+
+        [TestCase]
+        public async Task LoginWithToken()
+        {
+            DateTime currentTokenStart = DateTime.Now.AddMinutes(-11);
+            AproplanApiUtility.FakeLogin(request, currentTokenStart);
+            Guid currentToken = request.TokenInfo.Token;
+
+            FakeWebRequest.Instance.Reset();
+
+            var request2 = AproplanApiUtility.CreateRequester();
+
+            var alias = "john.smith@aproplan.com";
+
+            var userInfoMock = UserUtility.CreateUser(alias, "John Smith");
+            var users = new List<User> { userInfoMock };
+            Mock<HttpWebRequest> mockWebRequest = FakeWebRequest.CreateRequestWithResponsesSequences(alias, JsonConvert.SerializeObject(users));
             
+            var userInfo = await request2.Authorize(currentToken.ToString());
+
+            Assert.IsNotNull(userInfo);
+            Assert.AreEqual(alias, userInfo.Alias);
+            Assert.AreEqual(request2.RequestLoginState, RequestLoginState.Connected);
         }
     }
 }
