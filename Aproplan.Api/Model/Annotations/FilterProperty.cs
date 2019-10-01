@@ -6,6 +6,11 @@ namespace Aproplan.Api.Model.Annotations
 {
     public partial class FilterProperty : FormFilterCondition
     {
+        public FilterProperty()
+        {
+            EntityDiscriminator = nameof(FilterProperty);
+        }
+
         public bool? IsConform { get; set; }
 
         public string Value { get; set; }

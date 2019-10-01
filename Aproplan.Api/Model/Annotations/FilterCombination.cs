@@ -11,6 +11,11 @@ namespace Aproplan.Api.Model.Annotations
     }
     public partial class FilterCombination : FormFilterCondition
     {
+        public FilterCombination()
+        {
+            EntityDiscriminator = nameof(FilterCombination);
+        }
+
         public FormFilterType Type { get; set; }
 
         public FormFilterCondition RightFilter { get; set; }
