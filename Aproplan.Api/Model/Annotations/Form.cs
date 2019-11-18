@@ -76,5 +76,17 @@ namespace Aproplan.Api.Model.Annotations
             get;
             set;
         }
+
+        public int NbNonConformities
+        {
+            get;
+            set;
+        }
+
+        public int NbPointsOnForm
+        {
+            get;
+            set;
+        }
     }
 }
