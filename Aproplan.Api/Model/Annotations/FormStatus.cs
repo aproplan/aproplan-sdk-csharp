@@ -8,6 +8,7 @@ namespace Aproplan.Api.Model.Annotations
     {
         Todo,
         InProgress,
-        Done
+        Done,
+        WaitingForFinalisation
     }
 }

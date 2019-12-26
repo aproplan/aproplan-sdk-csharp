@@ -768,7 +768,7 @@ namespace Aproplan.Api.Http
 
         #region Constructors
 
-        public ApiRequest(string login, string password, Guid requesterId, string apiVersion = "20", string rootUrl = "https://app.aproplan.com", ILogger logger = null)
+        public ApiRequest(string login, string password, Guid requesterId, string apiVersion = "24", string rootUrl = "https://app.aproplan.com", ILogger logger = null)
         {
             // Force TLS 1.2
             System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
