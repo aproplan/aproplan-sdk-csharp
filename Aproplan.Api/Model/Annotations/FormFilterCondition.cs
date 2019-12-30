@@ -6,7 +6,6 @@ using System.Text;
 
 namespace Aproplan.Api.Model.Annotations
 {
-    [JsonConverter(typeof(FormFilterConditionJsonConverter))]
     public abstract partial class FormFilterCondition : Entity
     {
         public Guid? FormElementId { get; set; }

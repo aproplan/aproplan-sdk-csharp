@@ -24,6 +24,7 @@ namespace Aproplan.Api.Tests.Model.Annotations
             Assert.IsNull(form.From);
             Assert.AreEqual(template.SectionRules.Count, form.Sections.Count);
             Assert.AreEqual(template.Questions.Count, form.Items.Count);
+            Assert.AreEqual(template.IsSignatureAllowed, form.IsSignatureAllowed);
 
             int i = 0;
             template.SectionRules.ForEach((section) =>
