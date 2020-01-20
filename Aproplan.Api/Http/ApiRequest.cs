@@ -634,7 +634,30 @@ namespace Aproplan.Api.Http
                     allQueryParams.Add(keyPair.Key, keyPair.Value);
 
             uriBuilder.Query = new FormUrlEncodedContent(allQueryParams).ReadAsStringAsync().Result;
+            // Post To GET when url is too long
+            if (uriBuilder.Uri.ToString().Length >= 1500 && method.ToString().ToUpperInvariant() == "GET")
+            {
+                uriBuilder.Query = new FormUrlEncodedContent(BuildDefaultQueryParams()).ReadAsStringAsync().Result;
+                var action = uriBuilder.Path.Split('/').Last();
+                string paramsPostToGet = "";
+                foreach (var param in queryParams)
+                {
+                    paramsPostToGet += (paramsPostToGet.Length > 0 ? "&" : "") + $"{param.Key}={param.Value}";
+                }
 
+                var dataPost = new
+                {
+                    EntityAction = action,
+                    Params = paramsPostToGet
+                };
+
+                data = JsonConvert.SerializeObject(dataPost, new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc
+                });
+                
+                method = ApiMethod.Post;
+            }
 
             WebRequest request = WebRequest.Create(uriBuilder.Uri);
             request.Method = method.ToString().ToUpperInvariant();
@@ -676,7 +699,7 @@ namespace Aproplan.Api.Http
                         if (_logger != null)
                         {
                             string debugMsg = $"API response of {method} to {uri}\r\n\r\n";
-                            debugMsg += "\r\n data: " + dataString == null ? "<null>" : dataString;
+                            debugMsg += "\r\n data: " + (dataString == null ? "<null>" : dataString);
                             _logger.LogDebug(debugMsg);
                         }
 
