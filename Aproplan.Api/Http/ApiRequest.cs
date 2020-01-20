@@ -637,7 +637,9 @@ namespace Aproplan.Api.Http
             // Post To GET when url is too long
             if (uriBuilder.Uri.ToString().Length >= 1500 && method.ToString().ToUpperInvariant() == "GET")
             {
-                uriBuilder.Query = new FormUrlEncodedContent(BuildDefaultQueryParams()).ReadAsStringAsync().Result;
+                var newUriBuilder = new UriBuilder(ApiRootUrl + "posttoget");
+                
+                newUriBuilder.Query = new FormUrlEncodedContent(BuildDefaultQueryParams()).ReadAsStringAsync().Result;
                 var action = uriBuilder.Path.Split('/').Last();
                 string paramsPostToGet = "";
                 foreach (var param in queryParams)
@@ -657,6 +659,7 @@ namespace Aproplan.Api.Http
                 });
                 
                 method = ApiMethod.Post;
+                uriBuilder = newUriBuilder;
             }
 
             WebRequest request = WebRequest.Create(uriBuilder.Uri);

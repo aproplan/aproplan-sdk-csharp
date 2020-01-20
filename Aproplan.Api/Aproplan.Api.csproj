@@ -5,16 +5,16 @@
     <Version>1.16.10-APBIM-36-4</Version>
     <Company>APROPLAN</Company>
     <Product>Aproplan API SDK</Product>
-    <Authors>APROPLAN</Authors>
+    <Authors>LetsBuild</Authors>
     <PackageTags></PackageTags>
-    <Description>The official APROPLAN client API for .NET</Description>
+    <Description>The official Letsbuild (formerly APROPLAN) client API for .NET</Description>
     <PackageId />
     <PackageProjectUrl>https://github.com/aproplan/aproplan-sdk-csharp</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <AssemblyVersion>1.16.10.4</AssemblyVersion>
     <FileVersion>1.16.10.4</FileVersion>
-    <PackageIconUrl>https://raw.githubusercontent.com/aproplan/aproplan-sdk-csharp/master/assets/aproplan.png</PackageIconUrl>
-    <PackageVersion>1.16.10-APBIM-36-5</PackageVersion>
+    <PackageIconUrl>https://raw.githubusercontent.com/aproplan/aproplan-sdk-csharp/master/assets/letsbuild.png</PackageIconUrl>
+    <PackageVersion>1.16.10-APBIM-36-6</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
