@@ -194,7 +194,7 @@ namespace Aproplan.Api.Http
             try
             {
                 Console.WriteLine("Renew token call...");
-                if(TokenInfo == null)
+                if (TokenInfo == null)
                 {
                     throw new ApiException("You must be login before to make a renew token");
                 }
@@ -403,7 +403,7 @@ namespace Aproplan.Api.Http
                 entities = new[] { entity };
             }
 
-            if(queryParams == null)
+            if (queryParams == null)
                 queryParams = new Dictionary<string, string>();
             if (filter != null)
                 queryParams.Add("filter", filter.ToString());
@@ -424,7 +424,7 @@ namespace Aproplan.Api.Http
         {
             string resourceName = GetEntityResourceName<T>(GetEntityResourceType.List);
             string url = ApiRootUrl + resourceName;
-            if(queryParams == null)
+            if (queryParams == null)
                 queryParams = new Dictionary<string, string>();
             if (projectId.HasValue)
                 queryParams.Add("projectid", projectId.Value.ToString());
@@ -446,9 +446,9 @@ namespace Aproplan.Api.Http
             return await DeleteEntities<T>(new[] { id }, projectId, queryParams);
         }
 
-        
 
-        
+
+
 
         private async Task<T[]> CreateOrUpdateEntities<T>(T[] entities, bool isCreation, Guid? projectId = null, IDictionary<string, string> queryParams = null) where T : Entity
         {
@@ -504,7 +504,7 @@ namespace Aproplan.Api.Http
             }
 
             return await Request(ApiRootUrl + resourceName, ApiMethod.Get, queryParams);
-        }       
+        }
 
 
         internal string GetEntityResourceName<T>(GetEntityResourceType type) where T : Entity
@@ -557,20 +557,20 @@ namespace Aproplan.Api.Http
         /// <returns>The response of the request as a string</returns>
         public async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, bool isFile = false)
         {
-            if(_logger != null)
+            if (_logger != null)
             {
                 string debugMsg = $"API call {method} to {uri} \r\n\r\n";
-                if(queryParams != null && queryParams.Count > 0)
+                if (queryParams != null && queryParams.Count > 0)
                 {
                     debugMsg += "\r\nqueryParams: \r\n";
-                    foreach(var prm in queryParams)
+                    foreach (var prm in queryParams)
                     {
                         debugMsg += "- " + prm.Key + " = " + (prm.Value == null ? "<null>" : prm.Value) + "\r\n";
                     }
                 }
                 debugMsg += "\r\n data: " + data == null ? "<null>" : (isFile ? "file content" : data);
                 _logger.LogDebug(debugMsg);
-                
+
             }
 
             int nb = 0;
@@ -581,7 +581,7 @@ namespace Aproplan.Api.Http
             }
             if (!_resourcesLogin.Contains(uri) && uri != _resourceRenew)
             {
-                while (RequestLoginState == RequestLoginState.Connecting || RequestLoginState == RequestLoginState.Renewing && nb < 10)
+                while ((RequestLoginState == RequestLoginState.Connecting || RequestLoginState == RequestLoginState.Renewing) && nb < 10)
                 {
                     Thread.Sleep(300);
                     nb++;
@@ -595,7 +595,33 @@ namespace Aproplan.Api.Http
                     allQueryParams.Add(keyPair.Key, keyPair.Value);
 
             uriBuilder.Query = new FormUrlEncodedContent(allQueryParams).ReadAsStringAsync().Result;
+            // Post To GET when url is too long
+            if (uriBuilder.Uri.ToString().Length >= 1500 && method.ToString().ToUpperInvariant() == "GET")
+            {
+                var newUriBuilder = new UriBuilder(ApiRootUrl + "posttoget");
+                
+                newUriBuilder.Query = new FormUrlEncodedContent(BuildDefaultQueryParams()).ReadAsStringAsync().Result;
+                var action = uriBuilder.Path.Split('/').Last();
+                string paramsPostToGet = "";
+                foreach (var param in queryParams)
+                {
+                    paramsPostToGet += (paramsPostToGet.Length > 0 ? "&" : "") + $"{param.Key}={param.Value}";
+                }
 
+                var dataPost = new
+                {
+                    EntityAction = action,
+                    Params = paramsPostToGet
+                };
+
+                data = JsonConvert.SerializeObject(dataPost, new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc
+                });
+                
+                method = ApiMethod.Post;
+                uriBuilder = newUriBuilder;
+            }
 
             WebRequest request = WebRequest.Create(uriBuilder.Uri);
             request.Method = method.ToString().ToUpperInvariant();
@@ -637,7 +663,7 @@ namespace Aproplan.Api.Http
                         if (_logger != null)
                         {
                             string debugMsg = $"API response of {method} to {uri}\r\n\r\n";
-                            debugMsg += "\r\n data: " + dataString == null ? "<null>" : dataString;
+                            debugMsg += "\r\n data: " + (dataString == null ? "<null>" : dataString);
                             _logger.LogDebug(debugMsg);
                         }
 
@@ -766,12 +792,12 @@ namespace Aproplan.Api.Http
             {
                 ApiRootUrl + "loginwithfullinfosecure",
                 ApiRootUrl + "loginsecure",
-                ApiRootUrl + "simpleloginsecure"
+                ApiRootUrl + "simpleloginsecure",
             };
 
             _resourceRenew = ApiRootUrl + "renewtoken";
 
-            _logger = logger; 
+            _logger = logger;
         }
 
         public ApiRequest(string login, string password, Guid requesterId, string rootUrl = null) : this(login, password, requesterId, DefaultApiVersion, rootUrl)

@@ -2,18 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.16.10.4</Version>
+    <Version>1.16.10.5</Version>
     <Company>APROPLAN</Company>
     <Product>Aproplan API SDK</Product>
-    <Authors>APROPLAN</Authors>
+    <Authors>LetsBuild</Authors>
     <PackageTags></PackageTags>
-    <Description>The official APROPLAN client API for .NET</Description>
+    <Description>The official Letsbuild (formerly APROPLAN) client API for .NET</Description>
     <PackageId />
     <PackageProjectUrl>https://github.com/aproplan/aproplan-sdk-csharp</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>1.16.10.4</AssemblyVersion>
-    <FileVersion>1.16.10.4</FileVersion>
-    <PackageIconUrl>https://raw.githubusercontent.com/aproplan/aproplan-sdk-csharp/master/assets/aproplan.png</PackageIconUrl>
+    <AssemblyVersion>1.16.10.5</AssemblyVersion>
+    <FileVersion>1.16.10.5</FileVersion>   
+    <PackageIconUrl>https://raw.githubusercontent.com/aproplan/aproplan-sdk-csharp/master/assets/letsbuild.png</PackageIconUrl>
+    <PackageVersion>1.16.10.5</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

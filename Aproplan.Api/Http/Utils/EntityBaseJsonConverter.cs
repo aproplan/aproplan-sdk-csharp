@@ -60,12 +60,15 @@ namespace Aproplan.Api.Http.Utils
                     serializer.Populate(jo.CreateReader(), entity);
                     return entity;
                 }
+                else
+                {
+                    throw new Exception("Converter used with not managed type " + objectType?.Name);
+                }
             }
             catch (Exception)
             {
                 return null;
             }
-            throw new NotImplementedException();
         }
 
         public override bool CanWrite
