@@ -8,7 +8,6 @@ namespace Aproplan.Api.Model.Annotations
     {
         public FilterProperty()
         {
-            EntityDiscriminator = nameof(FilterProperty);
         }
 
         public bool? IsConform { get; set; }

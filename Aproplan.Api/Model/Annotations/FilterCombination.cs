@@ -13,7 +13,7 @@ namespace Aproplan.Api.Model.Annotations
     {
         public FilterCombination()
         {
-            EntityDiscriminator = nameof(FilterCombination);
+            
         }
 
         public FormFilterType Type { get; set; }

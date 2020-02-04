@@ -105,5 +105,39 @@ namespace Aproplan.Api.Tests
                                   "\"IsReadOnly\":false,\"HasAttachment\":false,\"Id\":\"" + noteBase.Id +"\",\"EntityVersion\":0,\"Deleted\":false,\"EntityCreationDate\":\"0001-01-01T00:00:00\",\"EntityModificationDate\":\"0001-01-01T00:00:00\","+
                                   "\"EntityCreationUser\":\"00000000-0000-0000-0000-000000000000\"}");
         }
+
+        [TestCase]
+        public void ShouldConvertEntityToCorrectJson()
+        {
+            Guid leftId = Guid.NewGuid();
+            Guid rightId = Guid.NewGuid();
+            
+            var left = new FilterProperty
+            {
+                IsConform = true,
+                Value = "This is a test left",
+                ItemId = leftId
+            };
+            var right = new FilterProperty
+            {
+                IsConform = true,
+                Value = "This is a test right",
+                ItemId = rightId
+            };
+            var combination = new FilterCombination
+            {
+                RightFilter = right,
+                LeftFilter = left,
+                Type = FormFilterType.And
+            };
+
+            string jsonTest = JsonConvert.SerializeObject(combination);
+            Assert.AreEqual("{\"EntityDiscriminator\":\"FilterCombination\",\"Type\":0,\"RightFilter\":{\"EntityDiscriminator\":\"FilterProperty\",\"IsConform\":true,\"Value\":\"This is a test right\",\"NotApplicable\":false,\"ItemId\":\"" + 
+                            rightId + "\",\"Id\":\"" + right.Id + "\",\"EntityVersion\":0,\"Deleted\":false,\"EntityCreationDate\":\"0001-01-01T00:00:00\",\"EntityModificationDate\":\"0001-01-01T00:00:00\",\"EntityCreationUser\":\"00000000-0000-0000-0000-000000000000\"}," + 
+                            "\"LeftFilter\":{\"EntityDiscriminator\":\"FilterProperty\",\"IsConform\":true,\"Value\":\"This is a test left\",\"NotApplicable\":false,\"ItemId\":\""+ leftId + 
+                            "\",\"Id\":\"" + left.Id + "\",\"EntityVersion\":0,\"Deleted\":false,\"EntityCreationDate\":\"0001-01-01T00:00:00\",\"EntityModificationDate\":\"0001-01-01T00:00:00\",\"EntityCreationUser\":\"00000000-0000-0000-0000-000000000000\"},"+
+                            "\"Id\":\"" + combination.Id + "\",\"EntityVersion\":0,\"Deleted\":false,\"EntityCreationDate\":\"0001-01-01T00:00:00\",\"EntityModificationDate\":\"0001-01-01T00:00:00\",\"EntityCreationUser\":\"00000000-0000-0000-0000-000000000000\"}", jsonTest);
+
+        }
     }
 }

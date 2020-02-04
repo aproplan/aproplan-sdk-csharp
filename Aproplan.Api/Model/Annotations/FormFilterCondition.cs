@@ -10,7 +10,6 @@ namespace Aproplan.Api.Model.Annotations
     {
         public Guid? FormElementId { get; set; }
 
-        public string EntityDiscriminator { get; set; }
 
         public abstract FormFilterCondition Copy();
 
