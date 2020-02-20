@@ -42,9 +42,9 @@ namespace Aproplan.Api.Http.Services
             return await UploadDocumentOrVersion(projectId, UploadFileType.Working, filePath, folderId, nameDocument);
         }
         
-        public async Task<Document> UploadNewDocument(Guid projectId, Stream stream, Guid folderId, string nameDocument = null)
+        public async Task<Document> UploadNewDocument(Guid projectId, Stream stream, string contentType, Guid folderId, string nameDocument = null)
         {
-            return await UploadDocumentOrVersion(projectId, UploadFileType.Working, stream, folderId, nameDocument);
+            return await UploadDocumentOrVersion(projectId, UploadFileType.Working, stream, contentType, folderId, nameDocument);
         }
 
         /// <summary>
@@ -59,10 +59,10 @@ namespace Aproplan.Api.Http.Services
             return await UploadDocumentOrVersion(projectId, UploadFileType.Source, filePath, null, null, document.Id, document.VersionCount == 0 ? UploadTarget.Document : UploadTarget.Version, UploadAction.Join);
         }
         
-        public async Task<Document> UploadSourceToDocument(Guid projectId, Stream stream, Document document)
+        public async Task<Document> UploadSourceToDocument(Guid projectId, Stream stream, string contentType, Document document)
         {
             
-            return await UploadDocumentOrVersion(projectId, UploadFileType.Source, stream, null, null, document.Id, document.VersionCount == 0 ? UploadTarget.Document : UploadTarget.Version, UploadAction.Join);
+            return await UploadDocumentOrVersion(projectId, UploadFileType.Source, stream, contentType, null, null, document.Id, document.VersionCount == 0 ? UploadTarget.Document : UploadTarget.Version, UploadAction.Join);
         }
 
         /// <summary>
@@ -78,9 +78,9 @@ namespace Aproplan.Api.Http.Services
             return await UploadDocumentOrVersion(projectId, uploadFileType, filePath, null, documentName, documentId, UploadTarget.Version, UploadAction.Add);
         }
         
-        public async Task<Document> UploadVersion(Guid projectId, Guid documentId, Stream stream, string documentName = null, UploadFileType uploadFileType = UploadFileType.Working)
+        public async Task<Document> UploadVersion(Guid projectId, Guid documentId, Stream stream, string contentType, string documentName = null, UploadFileType uploadFileType = UploadFileType.Working)
         {
-            return await UploadDocumentOrVersion(projectId, uploadFileType, stream, null, documentName, documentId, UploadTarget.Version, UploadAction.Add);
+            return await UploadDocumentOrVersion(projectId, uploadFileType, stream, contentType, null, documentName, documentId, UploadTarget.Version, UploadAction.Add);
         }
 
         private async Task<Document> UploadDocumentOrVersion(Guid projectId, UploadFileType uploadFileType, 
@@ -97,7 +97,7 @@ namespace Aproplan.Api.Http.Services
         }
         
         private async Task<Document> UploadDocumentOrVersion(Guid projectId, UploadFileType uploadFileType, 
-            Stream stream, Guid? folderId = null, string nameDocument = null, Guid? documentId = null, 
+            Stream stream, string contentType, Guid? folderId = null, string nameDocument = null, Guid? documentId = null, 
             UploadTarget target = UploadTarget.Document, UploadAction action = UploadAction.Add)
         {
             Dictionary<string, string> queryParams = BuildQueryParamsUploadDoc(projectId, uploadFileType, string.Empty,
@@ -105,7 +105,7 @@ namespace Aproplan.Api.Http.Services
 
             
 
-            string docJson = (await Requester.Request(Requester.ApiRootUrl + "uploaddocument", ApiMethod.Post, queryParams, stream)).Data;
+            string docJson = (await Requester.Request(Requester.ApiRootUrl + "uploaddocument", ApiMethod.Post, queryParams, stream, contentType)).Data;
             return JsonConvert.DeserializeObject<Document>(docJson);
         }
 

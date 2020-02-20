@@ -35,13 +35,14 @@ namespace Aproplan.Api.Http
         bool IsTokenValid();
         Task<User> Login();
         Task<User> Login(string login, string password);
+
         void Logout();
         Task<TokenInfo> RenewToken();
         Task<HttpResponse> Request(string uri, ApiMethod method);
         Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams);
         Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams, string data, bool isFile = false);
         Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams,
-            Stream stream);
+            Stream stream, string contentType);
         Task<T[]> UpdateEntities<T>(T[] entities, Guid? projectId = null) where T : Entity;
         Task<T> UpdateEntity<T>(T entity, Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null, Dictionary<string, string> queryParams = null) where T : Entity;
     }

@@ -125,7 +125,7 @@ namespace Aproplan.Api.Http
                 _isConnecting = true;
                 string data = JsonConvert.SerializeObject(loginInfo);
 
-                string res = (await Request(url, ApiMethod.Post, null, data)).Data;
+                string res = (await Request(url, ApiMethod.Post, null, data, false)).Data;
                 if (String.IsNullOrEmpty(res))
                 {
                     throw new ApiException("Your login or password is not correct", "INVALID_CREDENTIALS", null, url, 401, "POST");
@@ -203,7 +203,7 @@ namespace Aproplan.Api.Http
                     throw new ApiException("Your current token is invalid, use login method instead", "TOKEN_EXPIRED");
                 }
 
-                string res = (await Request(ApiRootUrl + "renewtoken", ApiMethod.Get, null, null)).Data;
+                string res = (await Request(ApiRootUrl + "renewtoken", ApiMethod.Get)).Data;
                 TokenInfo = JsonConvert.DeserializeObject<TokenInfo>(res, new JsonSerializerSettings
                 {
                     DateTimeZoneHandling = DateTimeZoneHandling.Local
@@ -333,7 +333,7 @@ namespace Aproplan.Api.Http
                 pass = password
             };
 
-            HttpResponse response = await Request(url, ApiMethod.Post, queryParams, JsonConvert.SerializeObject(data));
+            HttpResponse response = await Request(url, ApiMethod.Post, queryParams, JsonConvert.SerializeObject(data), false);
             return JsonConvert.DeserializeObject<User>(response.Data, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Local
@@ -431,7 +431,7 @@ namespace Aproplan.Api.Http
             await Request(url, ApiMethod.Delete, queryParams, JsonConvert.SerializeObject(ids, new JsonSerializerSettings
             {
                 DateTimeZoneHandling = DateTimeZoneHandling.Utc
-            }));
+            }), false);
             return true;
         }
 
@@ -465,7 +465,7 @@ namespace Aproplan.Api.Http
                 response = (await Request(url, method, queryParams, JsonConvert.SerializeObject(entities, new JsonSerializerSettings
                 {
                     DateTimeZoneHandling = DateTimeZoneHandling.Utc
-                }))).Data;
+                }), false)).Data;
 
             T[] resEntities = null;
             if (!String.IsNullOrEmpty(response))
@@ -565,23 +565,24 @@ namespace Aproplan.Api.Http
 
 
         public async Task<HttpResponse> Request(string uri, ApiMethod method,
-            IDictionary<string, string> queryParams, string data, bool isFile = false)
+            IDictionary<string, string> queryParams, string data, bool isFile)
         {
             if (!String.IsNullOrEmpty(data) && isFile)
             {
                 using (FileStream fileStream = File.Open(data, FileMode.Open, FileAccess.Read))
                 {
-                    return await Request(uri, method, queryParams, null, fileStream);
+                    var contentType = "application/" + Path.GetExtension(data).Substring(1);
+                    return await Request(uri, method, queryParams, null, fileStream, contentType);
                 }    
             }
-            return await Request(uri, method, queryParams, data);
+            return await Request(uri, method, queryParams, data, null, null);
             
         }
         
         public async Task<HttpResponse> Request(string uri, ApiMethod method,
-            IDictionary<string, string> queryParams, Stream stream)
+            IDictionary<string, string> queryParams, Stream stream, string contentType)
         {
-            return await Request(uri, method, queryParams, null, stream);
+            return await Request(uri, method, queryParams, null, stream, contentType);
             
         }
 
@@ -606,7 +607,7 @@ namespace Aproplan.Api.Http
         /// <param name="data">The data to send through the request</param>
         /// <param name="stream">If you upload something, this is the stream containing the data to upload</param>
         /// <returns>The response of the request as a string</returns>
-        private async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams, string data, Stream stream)
+        private async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams, string data, Stream stream, string contentType)
         {
             WriteLogRequest(uri, method, queryParams, data, stream);
 
@@ -677,9 +678,12 @@ namespace Aproplan.Api.Http
             }
             else if(stream != null)
             {
-                request.ContentType = "application/" + Path.GetExtension(data).Substring(1);
+                var oldPosition = stream.Position;
+                stream.Position = 0;
+                request.ContentType = contentType;
                 request.ContentLength = stream.Length;
                 stream.CopyTo(request.GetRequestStream());
+                stream.Position = oldPosition;
             }
             try
             {
