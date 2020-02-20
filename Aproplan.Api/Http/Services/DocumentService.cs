@@ -41,6 +41,11 @@ namespace Aproplan.Api.Http.Services
         {
             return await UploadDocumentOrVersion(projectId, UploadFileType.Working, filePath, folderId, nameDocument);
         }
+        
+        public async Task<Document> UploadNewDocument(Guid projectId, Stream stream, Guid folderId, string nameDocument = null)
+        {
+            return await UploadDocumentOrVersion(projectId, UploadFileType.Working, stream, folderId, nameDocument);
+        }
 
         /// <summary>
         /// To upload and join a source file to an existing document. 
@@ -52,6 +57,12 @@ namespace Aproplan.Api.Http.Services
         {
             
             return await UploadDocumentOrVersion(projectId, UploadFileType.Source, filePath, null, null, document.Id, document.VersionCount == 0 ? UploadTarget.Document : UploadTarget.Version, UploadAction.Join);
+        }
+        
+        public async Task<Document> UploadSourceToDocument(Guid projectId, Stream stream, Document document)
+        {
+            
+            return await UploadDocumentOrVersion(projectId, UploadFileType.Source, stream, null, null, document.Id, document.VersionCount == 0 ? UploadTarget.Document : UploadTarget.Version, UploadAction.Join);
         }
 
         /// <summary>
@@ -66,8 +77,41 @@ namespace Aproplan.Api.Http.Services
         {
             return await UploadDocumentOrVersion(projectId, uploadFileType, filePath, null, documentName, documentId, UploadTarget.Version, UploadAction.Add);
         }
+        
+        public async Task<Document> UploadVersion(Guid projectId, Guid documentId, Stream stream, string documentName = null, UploadFileType uploadFileType = UploadFileType.Working)
+        {
+            return await UploadDocumentOrVersion(projectId, uploadFileType, stream, null, documentName, documentId, UploadTarget.Version, UploadAction.Add);
+        }
 
-        private async Task<Document> UploadDocumentOrVersion(Guid projectId, UploadFileType uploadFileType, string filePath, Guid? folderId = null, string nameDocument = null, Guid? documentId = null, UploadTarget target = UploadTarget.Document, UploadAction action = UploadAction.Add)
+        private async Task<Document> UploadDocumentOrVersion(Guid projectId, UploadFileType uploadFileType, 
+                    string filePath, Guid? folderId = null, string nameDocument = null, Guid? documentId = null, 
+                    UploadTarget target = UploadTarget.Document, UploadAction action = UploadAction.Add)
+        {
+            Dictionary<string, string> queryParams = BuildQueryParamsUploadDoc(projectId, uploadFileType, filePath,
+                folderId, nameDocument, documentId, target, action);
+
+            
+
+            string docJson = (await Requester.Request(Requester.ApiRootUrl + "uploaddocument", ApiMethod.Post, queryParams, filePath, true)).Data;
+            return JsonConvert.DeserializeObject<Document>(docJson);
+        }
+        
+        private async Task<Document> UploadDocumentOrVersion(Guid projectId, UploadFileType uploadFileType, 
+            Stream stream, Guid? folderId = null, string nameDocument = null, Guid? documentId = null, 
+            UploadTarget target = UploadTarget.Document, UploadAction action = UploadAction.Add)
+        {
+            Dictionary<string, string> queryParams = BuildQueryParamsUploadDoc(projectId, uploadFileType, string.Empty,
+                folderId, nameDocument, documentId, target, action);
+
+            
+
+            string docJson = (await Requester.Request(Requester.ApiRootUrl + "uploaddocument", ApiMethod.Post, queryParams, stream)).Data;
+            return JsonConvert.DeserializeObject<Document>(docJson);
+        }
+
+        private Dictionary<string, string> BuildQueryParamsUploadDoc(Guid projectId, UploadFileType uploadFileType, 
+            string filePath, Guid? folderId = null, string nameDocument = null, Guid? documentId = null, 
+            UploadTarget target = UploadTarget.Document, UploadAction action = UploadAction.Add)
         {
             Dictionary<string, string> queryParams = new Dictionary<string, string>
             {
@@ -78,7 +122,7 @@ namespace Aproplan.Api.Http.Services
             };
             if(target == UploadTarget.Document && action == UploadAction.Add)
             {
-                if (String.IsNullOrEmpty(nameDocument))
+                if (String.IsNullOrEmpty(nameDocument) && !string.IsNullOrEmpty(filePath))
                     nameDocument = Path.GetFileNameWithoutExtension(filePath);
             }
 
@@ -89,17 +133,13 @@ namespace Aproplan.Api.Http.Services
                 queryParams.Add("folderid", folderId.Value.ToString());
             if (documentId.HasValue)
                 queryParams.Add("parentdocid", documentId.Value.ToString());
-
-            
-
-            string docJson = (await Requester.Request(Requester.ApiRootUrl + "uploaddocument", ApiMethod.Post, queryParams, filePath, true)).Data;
-            return JsonConvert.DeserializeObject<Document>(docJson);
+            return queryParams;
         }
 
         #endregion
 
         #region Constructor
-        public DocumentService(ApiRequest apiRequest): base(apiRequest)
+        public DocumentService(IApiRequest apiRequest): base(apiRequest)
         {
 
         }

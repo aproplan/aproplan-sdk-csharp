@@ -34,7 +34,7 @@ namespace Aproplan.Api.Http.Services
         #endregion
 
         #region Constructor
-        public ProjectService(ApiRequest apiRequest) : base(apiRequest)
+        public ProjectService(IApiRequest apiRequest) : base(apiRequest)
         {
 
         }

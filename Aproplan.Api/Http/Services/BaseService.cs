@@ -8,13 +8,13 @@ namespace Aproplan.Api.Http.Services
     {
         #region Properties
 
-        protected ApiRequest Requester { get; private set; }
+        protected IApiRequest Requester { get; private set; }
 
         #endregion
 
         #region Constructors
 
-        protected BaseService(ApiRequest request)
+        protected BaseService(IApiRequest request)
         {
             Requester = request;
         }

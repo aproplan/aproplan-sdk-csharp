@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Aproplan.Api.Http.Utils;
 using Aproplan.Api.Model;
@@ -36,7 +37,11 @@ namespace Aproplan.Api.Http
         Task<User> Login(string login, string password);
         void Logout();
         Task<TokenInfo> RenewToken();
-        Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, bool isFile = false);
+        Task<HttpResponse> Request(string uri, ApiMethod method);
+        Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams);
+        Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams, string data, bool isFile = false);
+        Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams,
+            Stream stream);
         Task<T[]> UpdateEntities<T>(T[] entities, Guid? projectId = null) where T : Entity;
         Task<T> UpdateEntity<T>(T entity, Guid? projectId = null, Filter filter = null, PathToLoad pathToLoad = null, Dictionary<string, string> queryParams = null) where T : Entity;
     }

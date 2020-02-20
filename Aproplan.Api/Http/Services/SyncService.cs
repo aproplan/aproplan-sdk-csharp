@@ -100,7 +100,7 @@ namespace Aproplan.Api.Http.Services
             string resourceName = forcedResourceName;
             if (resourceName == null)
             {
-                resourceName = Requester.GetEntityResourceName<T>(GetEntityResourceType.Sync);
+                resourceName = ApiRequest.GetEntityResourceName<T>(GetEntityResourceType.Sync);
             }
             IDictionary<String, String> additionalParams = new Dictionary<String, String>();
             if(!string.IsNullOrEmpty(syncStamp))
@@ -126,7 +126,7 @@ namespace Aproplan.Api.Http.Services
 
         #region Constructor
 
-        public SyncService(ApiRequest apiRequest) : base(apiRequest)
+        public SyncService(IApiRequest apiRequest) : base(apiRequest)
         {
             
         }

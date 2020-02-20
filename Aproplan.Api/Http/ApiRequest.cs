@@ -507,7 +507,7 @@ namespace Aproplan.Api.Http
         }
 
 
-        internal string GetEntityResourceName<T>(GetEntityResourceType type) where T : Entity
+        internal static string GetEntityResourceName<T>(GetEntityResourceType type) where T : Entity
         {
             string resourceName = typeof(T).Name.ToLowerInvariant();
             int len = resourceName.Length;
@@ -544,18 +544,7 @@ namespace Aproplan.Api.Http
             return retVal;
         }
 
-
-        /// <summary>
-        /// To make a call to the APROPLAN api
-        /// </summary>
-        /// <param name="uri">The url to call</param>
-        /// <param name="method">The method to use to make the call</param>
-        /// <param name="queryParams">The query params collection to use</param>
-        /// <param name="data">The data to send through the request</param>
-        /// <param name="isFile">To know if the data is a file path or not</param>
-        /// <param name="additionalHeaders">Additional headers to add to the HTTP call</param>
-        /// <returns>The response of the request as a string</returns>
-        public async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, bool isFile = false)
+        private void WriteLogRequest(string uri, ApiMethod method, IDictionary<string, string> queryParams = null, string data = null, Stream stream = null)
         {
             if (_logger != null)
             {
@@ -568,10 +557,58 @@ namespace Aproplan.Api.Http
                         debugMsg += "- " + prm.Key + " = " + (prm.Value == null ? "<null>" : prm.Value) + "\r\n";
                     }
                 }
-                debugMsg += "\r\n data: " + data == null ? "<null>" : (isFile ? "file content" : data);
+                debugMsg += "\r\n data: " + data == null ? "<null>" : (stream != null ? "file content" : data);
                 _logger.LogDebug(debugMsg);
 
             }
+        }
+
+
+        public async Task<HttpResponse> Request(string uri, ApiMethod method,
+            IDictionary<string, string> queryParams, string data, bool isFile = false)
+        {
+            if (!String.IsNullOrEmpty(data) && isFile)
+            {
+                using (FileStream fileStream = File.Open(data, FileMode.Open, FileAccess.Read))
+                {
+                    return await Request(uri, method, queryParams, null, fileStream);
+                }    
+            }
+            return await Request(uri, method, queryParams, data);
+            
+        }
+        
+        public async Task<HttpResponse> Request(string uri, ApiMethod method,
+            IDictionary<string, string> queryParams, Stream stream)
+        {
+            return await Request(uri, method, queryParams, null, stream);
+            
+        }
+
+        public async Task<HttpResponse> Request(string uri, ApiMethod method)
+        {
+            return await Request(uri, method, null, null, null);
+        }
+        
+        public async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams)
+        {
+            return await Request(uri, method, queryParams, null, null);
+        }
+        
+        
+
+        /// <summary>
+        /// To make a call to the APROPLAN api
+        /// </summary>
+        /// <param name="uri">The url to call</param>
+        /// <param name="method">The method to use to make the call</param>
+        /// <param name="queryParams">The query params collection to use</param>
+        /// <param name="data">The data to send through the request</param>
+        /// <param name="stream">If you upload something, this is the stream containing the data to upload</param>
+        /// <returns>The response of the request as a string</returns>
+        private async Task<HttpResponse> Request(string uri, ApiMethod method, IDictionary<string, string> queryParams, string data, Stream stream)
+        {
+            WriteLogRequest(uri, method, queryParams, data, stream);
 
             int nb = 0;
             if (uri != _resourceRenew)
@@ -626,30 +663,23 @@ namespace Aproplan.Api.Http
             WebRequest request = WebRequest.Create(uriBuilder.Uri);
             request.Method = method.ToString().ToUpperInvariant();
 
-            Stream stream;
+            
             //stream = request.GetRequestStream();
             if (!String.IsNullOrEmpty(data))
             {
-                if (!isFile)
+                byte[] byteArray = Encoding.UTF8.GetBytes(data);
+                request.ContentType = "application/json";
+                request.ContentLength = byteArray.Length;
+                using (stream = request.GetRequestStream())
                 {
-                    byte[] byteArray = Encoding.UTF8.GetBytes(data);
-                    request.ContentType = "application/json";
-                    request.ContentLength = byteArray.Length;
-                    using (stream = request.GetRequestStream())
-                    {
-                        stream.Write(byteArray, 0, byteArray.Length);
-                    }
+                    stream.Write(byteArray, 0, byteArray.Length);
                 }
-                else
-                {
-                    using (FileStream fileStream = File.Open(data, FileMode.Open, FileAccess.Read))
-                    {
-
-                        request.ContentType = "application/" + Path.GetExtension(data).Substring(1);
-                        request.ContentLength = fileStream.Length;
-                        fileStream.CopyTo(request.GetRequestStream());
-                    }
-                }
+            }
+            else if(stream != null)
+            {
+                request.ContentType = "application/" + Path.GetExtension(data).Substring(1);
+                request.ContentLength = stream.Length;
+                stream.CopyTo(request.GetRequestStream());
             }
             try
             {
